@@ -15,6 +15,13 @@ Open `http://localhost:3000`. For microphone access on physical phones, use HTTP
 
 Set `NEXT_PUBLIC_API_URL` to the backend's HTTP origin to enable backend mode. The app checks `GET /health` and then opens `/ws/{roomCode}`. Without this variable, it starts in Preview mode with sample participants and captions.
 
+On localhost, the frontend automatically uses `http://localhost:8000`. Install and start the local prototype in a second terminal:
+
+```bash
+python -m pip install -r requirements.txt
+python speech_lineup.py
+```
+
 ## Project structure
 
 - `src/app/` — production UI and the `/diagnostics` route.
@@ -27,7 +34,7 @@ The audio diagnostics route uses the same audio client as the production UI. On 
 
 ## Backend integration status
 
-The Python backend is a prototype and its WebSocket protocol still needs to be aligned with the frontend client. In particular, the frontend expects a health endpoint, hello/ping/pong messages, batched level samples, ASR messages, and PCM frames. See the project code before treating a backend-connected demo as ready.
+The Python backend now accepts the frontend's health check, hello/ping/pong messages, batched level samples, ASR messages, PCM fallback frames, mic state, meeting-end votes, and final transcript events. It provides deterministic local caption ordering; a production speech/AI worker can replace that finalizer later.
 
 ### Meeting end and shared transcript messages
 
@@ -37,6 +44,6 @@ An unmuted participant may propose to end the meeting with `{type:"meeting_end_p
 
 After each vote, broadcast `meeting_end_vote_update` with that proposal ID, a `votes` array, and `status:"pending"`. Any `continue` vote rejects the proposal and broadcasts `status:"rejected"`; if a participant disconnects before the vote resolves, cancel it with `status:"cancelled"`. If and only if every participant in the vote agrees, stop accepting live audio and broadcast `{type:"meeting_ended", proposal_id}` to everyone. A muted microphone still receives and can vote on the proposal. Keep all room WebSockets open after `meeting_ended`; the clients stop local capture/ASR but stay connected for transcript delivery.
 
-While reconciling ASR segments with timestamps, confidence, and calibrated mic levels, send `{type:"transcript_status", status:"processing"}`. Then send `transcript_ready` with final `{id, speaker, t0, t1, text, conf, polished?}` segments, or `transcript_error` with an optional `message`. Timestamps are epoch milliseconds. The current `speech_lineup.py` prototype does not implement these messages, room-wide voting, or the caption-generation pipeline yet, so these controls are not end-to-end functional against that backend until it is updated.
+While reconciling ASR segments with timestamps, confidence, and calibrated mic levels, the local backend sends `{type:"transcript_status", status:"processing"}` followed by `transcript_ready` with final `{id, speaker, t0, t1, text, conf, polished?}` segments. Timestamps are epoch milliseconds. The local finalizer preserves and orders browser ASR text; it is not an AI rewrite service.
 
 The browser Web Speech API may send audio to the browser vendor's speech service. When the client falls back to PCM, audio is sent to the configured backend.

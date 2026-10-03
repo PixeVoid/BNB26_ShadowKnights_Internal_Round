@@ -7,7 +7,7 @@ Handles:
   - Streams live attribution JSON events & logs timeline to JSON for downstream STT
 
 Run:
-  uvicorn backend:app --host 0.0.0.0 --port 8000 --reload
+  uvicorn speech_lineup:app --host 0.0.0.0 --port 8000 --reload
 """
 
 import asyncio
@@ -15,7 +15,7 @@ import json
 import os
 import sys
 import time
-from typing import Dict, List, Optional
+from typing import Any, Dict, List, Optional
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
 
@@ -28,6 +28,12 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+
+@app.get("/health")
+async def health() -> dict:
+    """Small readiness endpoint used by the browser before opening a room."""
+    return {"status": "ok", "rooms": len(ROOMS)}
 
 # ---- Algorithm Settings (Section 6) ----
 VAD_DB = 6.0          # dB above phone's noise floor = active candidate
@@ -44,6 +50,9 @@ class RoomState:
         self.room_id = room_id
         # dev_id -> {"ws": WebSocket, "name": str, "state": str}
         self.participants: Dict[str, dict] = {}
+        self.end_proposal: Optional[dict] = None
+        self.meeting_ended = False
+        self.asr_segments: Dict[tuple[str, int], dict] = {}
         
         # Telemetry & noise tracking
         self.noise_floors: Dict[str, float] = {}   # dev_id -> rolling floor dB
@@ -146,88 +155,224 @@ class RoomState:
         return self.current_speaker, speaker_switched, candidates
 
 
+def protocol_ms() -> int:
+    return round(time.time() * 1000)
+
+
+async def broadcast_transcript(room: RoomState, proposal_id: str) -> None:
+    """Finalize the captions currently received by the room.
+
+    This is deliberately deterministic local behavior: the backend preserves
+    the browser ASR text and orders it by its shared timestamps. A production
+    worker can replace this function with the stronger multi-mic reconciliation
+    model without changing the client contract.
+    """
+    await room.broadcast({"type": "transcript_status", "status": "processing"})
+    segments = sorted(
+        (segment for segment in room.asr_segments.values() if segment.get("final", True)),
+        key=lambda segment: (segment.get("t0", 0), segment.get("t1", 0)),
+    )
+    output = []
+    for index, segment in enumerate(segments):
+        output.append({
+            "id": str(segment.get("id") or f"{segment.get('dev', 'room')}:{segment.get('seq', index)}"),
+            "speaker": segment.get("speaker") or segment.get("name") or segment.get("dev", "Room"),
+            "t0": int(segment.get("t0") or 0),
+            "t1": int(segment.get("t1") or segment.get("t0") or 0),
+            "text": str(segment.get("text") or "").strip(),
+            "conf": segment.get("conf"),
+            "polished": False,
+        })
+    await room.broadcast({"type": "transcript_ready", "proposal_id": proposal_id, "segments": output})
+
+
+async def finish_meeting(room: RoomState, proposal_id: str) -> None:
+    if room.meeting_ended:
+        return
+    room.meeting_ended = True
+    await room.broadcast({"type": "meeting_ended", "proposal_id": proposal_id})
+    await broadcast_transcript(room, proposal_id)
+
+
 ROOMS: Dict[str, RoomState] = {}
 
 
 @app.websocket("/ws/{room_id}")
 async def websocket_session(websocket: WebSocket, room_id: str):
     await websocket.accept()
-    await websocket.send_text(json.dumps({"type": "welcome"}))
-
     if room_id not in ROOMS:
         ROOMS[room_id] = RoomState(room_id)
     room = ROOMS[room_id]
-    
     dev_id = None
 
     try:
         while True:
-            raw_text = await websocket.receive_text()
-            data = json.loads(raw_text)
+            message = await websocket.receive()
+            if message.get("type") == "websocket.disconnect":
+                raise WebSocketDisconnect()
+            if message.get("bytes") is not None:
+                # PCM fallback frames are accepted and intentionally ignored by
+                # this attribution prototype. They must not terminate the room.
+                continue
+            raw_text = message.get("text")
+            if not raw_text:
+                continue
+            try:
+                data = json.loads(raw_text)
+            except json.JSONDecodeError:
+                await websocket.send_text(json.dumps({"type": "error", "message": "Invalid JSON message"}))
+                continue
             msg_type = data.get("type")
             now = time.time()
-            
-            current_dev = data.get("dev", dev_id)
-            if not current_dev:
-                continue
-            dev_id = current_dev
 
-            # ---------------- 1. PRESENCE (Join / Reconnect) ----------------
-            if msg_type == "presence":
+            # ---------------- 1. HELLO / PRESENCE ----------------
+            if msg_type in {"hello", "presence"}:
+                current_dev = str(data.get("dev", "")).strip()
+                if not current_dev:
+                    await websocket.send_text(json.dumps({"type": "error", "message": "A device id is required"}))
+                    continue
+                dev_id = current_dev
                 room.participants[dev_id] = {
                     "ws": websocket,
                     "name": data.get("name", dev_id),
                     "state": data.get("state", "joined"),
+                    "mic_enabled": False,
                 }
+                await websocket.send_text(json.dumps({
+                    "type": "welcome",
+                    "lastT": 0,
+                    "lastSeq": -1,
+                    "serverTs": protocol_ms(),
+                }))
                 await room.broadcast({
                     "type": "presence",
                     "dev": dev_id,
                     "name": data.get("name", dev_id),
                     "state": "joined",
-                    "timestamp": round(now, 3)
+                    "timestamp": protocol_ms(),
                 })
 
-            # ---------------- 2. CALIBRATION MATRIX (Section 6) ----------------
-            elif msg_type == "calibration":
-                speaker = data.get("speaker", dev_id)
-                levels = data.get("levels", {})
-                room.update_calibration(speaker, levels)
+            # ---------------- 2. CLOCK HEALTH ----------------
+            elif msg_type == "ping":
+                await websocket.send_text(json.dumps({
+                    "type": "pong",
+                    "id": data.get("id"),
+                    "t0": data.get("t0"),
+                    "ts": protocol_ms(),
+                }))
 
-            # ---------------- 3. LEVEL TELEMETRY (Every 20-50 ms) ----------------
-            elif msg_type == "level":
-                db = float(data.get("db", -100.0))
-                room.latest_levels[dev_id] = db
-                room.last_seen[dev_id] = now
+            elif not dev_id:
+                await websocket.send_text(json.dumps({"type": "error", "message": "Send hello before room messages"}))
 
-                # Online adaptive noise floor tracking
-                current_floor = room.noise_floors.get(dev_id, -50.0)
-                if db < current_floor:
-                    room.noise_floors[dev_id] = db
+            # ---------------- 3. PERSONAL MIC STATE ----------------
+            elif msg_type == "mic_state":
+                participant = room.participants.get(dev_id)
+                if participant:
+                    participant["mic_enabled"] = bool(data.get("enabled"))
+                    participant["name"] = data.get("name") or participant["name"]
+                    await room.broadcast({
+                        "type": "participant",
+                        "dev": dev_id,
+                        "name": participant["name"],
+                        "state": "speaking" if participant["mic_enabled"] else "connected",
+                        "mic_enabled": participant["mic_enabled"],
+                    })
+
+            # ---------------- 4. END-MEETING VOTE ----------------
+            elif msg_type == "meeting_end_propose":
+                participant = room.participants.get(dev_id)
+                if room.meeting_ended:
+                    continue
+                if not participant or not participant.get("mic_enabled"):
+                    await websocket.send_text(json.dumps({"type": "error", "message": "Turn your mic on before proposing to end the meeting"}))
+                    continue
+                if room.end_proposal:
+                    continue
+                proposal_id = str(data.get("proposal_id") or f"{dev_id}-{protocol_ms()}")
+                votes = [{"dev": member_dev, "name": member.get("name", member_dev), "vote": "end" if member_dev == dev_id else "pending"}
+                         for member_dev, member in room.participants.items()]
+                room.end_proposal = {"id": proposal_id, "proposer_dev": dev_id, "proposer_name": participant.get("name", dev_id), "votes": votes}
+                await room.broadcast({"type": "meeting_end_proposed", **room.end_proposal})
+                if len(votes) == 1:
+                    await finish_meeting(room, proposal_id)
+
+            elif msg_type == "meeting_end_vote":
+                proposal = room.end_proposal
+                vote = data.get("vote")
+                if not proposal or data.get("proposal_id") != proposal["id"] or vote not in {"end", "continue"}:
+                    continue
+                for current in proposal["votes"]:
+                    if current["dev"] == dev_id and current["dev"] != proposal["proposer_dev"]:
+                        current["vote"] = vote
+                if vote == "continue":
+                    await room.broadcast({"type": "meeting_end_vote_update", "proposal_id": proposal["id"], "status": "rejected", "message": "The room voted to keep the meeting going.", "votes": proposal["votes"]})
+                    room.end_proposal = None
+                elif all(current["vote"] == "end" for current in proposal["votes"]):
+                    await finish_meeting(room, proposal["id"])
+                    room.end_proposal = None
                 else:
-                    room.noise_floors[dev_id] = (
-                        ALPHA_NOISE * current_floor + (1.0 - ALPHA_NOISE) * db
-                    )
+                    await room.broadcast({"type": "meeting_end_vote_update", "proposal_id": proposal["id"], "status": "pending", "votes": proposal["votes"]})
 
-                dominant, switched, active_candidates = room.update_attribution(now)
+            # ---------------- 5. CALIBRATION MATRIX (Section 6) ----------------
+            elif msg_type in {"calibration", "calib"}:
+                speaker = data.get("speaker", dev_id)
+                if msg_type == "calib":
+                    room.leakage_matrix.setdefault(dev_id, {})[speaker] = float(data.get("level", 0.0))
+                else:
+                    levels = data.get("levels", {})
+                    room.update_calibration(speaker, levels)
 
-                # Output JSON event payload for downstream STT consumer
-                event_payload = {
-                    "type": "attribution",
-                    "timestamp": round(now, 3),
-                    "dominant_speaker": dominant,
-                    "speaker_name": room.participants.get(dominant, {}).get("name", dominant) if dominant else None,
-                    "speaker_switched": switched,
-                    "overlap": len(active_candidates) > 1,
-                    "active_speakers": active_candidates,
-                    "levels_db": {room.participants.get(d, {}).get("name", d): round(room.latest_levels[d], 1) for d in room.participants if d in room.latest_levels}
-                }
+            # ---------------- 6. LEVEL TELEMETRY (Every 20-50 ms) ----------------
+            elif msg_type == "level":
+                samples = data.get("batch") if isinstance(data.get("batch"), list) else [data]
+                for sample in samples:
+                    db = float(sample.get("db", -100.0))
+                    room.latest_levels[dev_id] = db
+                    room.last_seen[dev_id] = now
+                    current_floor = room.noise_floors.get(dev_id, -50.0)
+                    room.noise_floors[dev_id] = db if db < current_floor else ALPHA_NOISE * current_floor + (1.0 - ALPHA_NOISE) * db
+                    dominant, switched, active_candidates = room.update_attribution(now)
+                    event_payload = {
+                        "type": "attribution",
+                        "timestamp": protocol_ms(),
+                        "dominant_speaker": dominant,
+                        "speaker_name": room.participants.get(dominant, {}).get("name", dominant) if dominant else None,
+                        "speaker_switched": switched,
+                        "overlap": len(active_candidates) > 1,
+                        "active_speakers": active_candidates,
+                        "levels_db": {room.participants.get(d, {}).get("name", d): round(room.latest_levels[d], 1) for d in room.participants if d in room.latest_levels},
+                    }
+                    room.attribution_events.append(event_payload)
+                if samples:
+                    await room.broadcast(event_payload)
 
-                room.attribution_events.append(event_payload)
-                await room.broadcast(event_payload)
+            # ---------------- 7. ASR SEGMENTS ----------------
+            elif msg_type == "asr":
+                seq = int(data.get("seq", 0))
+                participant = room.participants.get(dev_id, {})
+                segment = {**data, "dev": dev_id, "name": participant.get("name", dev_id), "speaker": participant.get("name", dev_id), "id": f"{dev_id}:{seq}"}
+                room.asr_segments[(dev_id, seq)] = segment
+                await room.broadcast({
+                    "type": "segment",
+                    "id": segment["id"],
+                    "dev": dev_id,
+                    "speaker": segment["speaker"],
+                    "text": segment.get("text", ""),
+                    "t0": segment.get("t0"),
+                    "t1": segment.get("t1"),
+                    "seq": seq,
+                    "final": bool(segment.get("final", False)),
+                    "conf": segment.get("conf"),
+                })
 
     except WebSocketDisconnect:
-        if dev_id in room.participants:
+        owns_connection = dev_id in room.participants and room.participants[dev_id].get("ws") is websocket
+        if owns_connection:
             room.participants.pop(dev_id, None)
+            if room.end_proposal:
+                proposal_id = room.end_proposal["id"]
+                await room.broadcast({"type": "meeting_end_vote_update", "proposal_id": proposal_id, "status": "cancelled", "message": "A participant left before the vote finished."})
+                room.end_proposal = None
             await room.broadcast({
                 "type": "presence",
                 "dev": dev_id,
@@ -254,8 +399,10 @@ async def websocket_session(websocket: WebSocket, room_id: str):
         with open(EXPORT_PATH, "w", encoding="utf-8") as f:
             json.dump(export_data, f, indent=2)
         print(f"[Roundtable] Exported attribution data to {EXPORT_PATH}")
+        if not room.participants:
+            ROOMS.pop(room_id, None)
 
 
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run("backend:app", host="0.0.0.0", port=8000, reload=True)
+    uvicorn.run("speech_lineup:app", host="0.0.0.0", port=8000, reload=True)

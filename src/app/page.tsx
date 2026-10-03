@@ -23,7 +23,10 @@ const starter: Caption[] = [
 function apiOrigin() {
   if (typeof window === "undefined") return process.env.NEXT_PUBLIC_API_URL || "";
   const override = new URLSearchParams(window.location.search).get("api");
-  return (override || process.env.NEXT_PUBLIC_API_URL || "").replace(/\/$/, "");
+  const configured = override || process.env.NEXT_PUBLIC_API_URL || "";
+  if (configured) return configured.replace(/\/$/, "");
+  if (["localhost", "127.0.0.1"].includes(window.location.hostname)) return "http://localhost:8000";
+  return "";
 }
 function wsOrigin(base: string) {
   const url = new URL(base || window.location.origin);
