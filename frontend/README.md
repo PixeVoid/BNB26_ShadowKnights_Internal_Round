@@ -1,7 +1,3 @@
-# Shadow-Knights
-For Hackathon 
-Here is the documentation for the Roundtable frontend repository, structured to provide clear navigation for your 12-hour hackathon team.
-
 # Roundtable: Live Captions Frontend
 
 'Every phone is a microphone and an identity.'
