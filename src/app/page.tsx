@@ -205,13 +205,23 @@ export default function Home() {
   const [uiError, setUiError] = useState("");
   const [connection, setConnection] = useState<"idle" | "waking" | "connected" | "preview">("idle");
   const [fontScale, setFontScale] = useState(1);
-  const [highContrast, setHighContrast] = useState(false);
   const [phoneView, setPhoneView] = useState(false);
+  const [previewMicOn, setPreviewMicOn] = useState(false);
+  const [micLevel, setMicLevel] = useState(0);
+  const [micDb, setMicDb] = useState(-100);
   const [backend, setBackend] = useState("");
   const isPreviewRef = useRef(false);
   const rafRef = useRef<number>(0);
+  const previewMicRef = useRef<{ stream: MediaStream; context: AudioContext; analyser: AnalyserNode; samples: Uint8Array } | null>(null);
 
-  useEffect(() => { setBackend(apiOrigin()); }, []);
+  useEffect(() => {
+    setBackend(apiOrigin());
+    return () => {
+      previewMicRef.current?.stream.getTracks().forEach(track => track.stop());
+      previewMicRef.current?.context.close().catch(() => {});
+      previewMicRef.current = null;
+    };
+  }, []);
 
   const self = name || "You";
 
@@ -237,9 +247,19 @@ export default function Home() {
     if (data.type === "level") {
       setPeople(prev => prev.map(p =>
         p.name === (data.name || data.dev)
-          ? { ...p, level: Math.min(100, Math.max(0, Number(data.db) || 20)), state: data.vad ? "speaking" : "connected" }
+          ? { ...p, level: Math.min(100, Math.max(0, (typeof data.db === 'number' ? data.db : Number(data.db) || -80) + 100)), state: data.vad ? "speaking" : "connected" }
           : p
       ));
+    }
+    if (data.type === "attribution") {
+      setPeople(prev => prev.map(p => {
+        const db = data.levels_db?.[p.name];
+        if (db !== undefined) {
+          const isDominant = p.name === data.speaker_name;
+          return { ...p, level: Math.min(100, Math.max(0, db + 100)), state: isDominant ? "speaking" : "connected" };
+        }
+        return p;
+      }));
     }
     if (data.type === "segment" || data.type === "caption") {
       const segment = data.segment || data;
@@ -290,27 +310,53 @@ export default function Home() {
     if (audio.error) setUiError(audio.error);
   }, [audio.error]);
 
-  // ── RAF: update OUR OWN level bar from the local meter ───────────────────
+  // ── RAF: meter the local microphone for the room list and waveform ────────
   useEffect(() => {
-    if (audio.status !== "live") {
+    const liveMic = audio.status === "live";
+    if (!liveMic && !previewMicOn) {
       cancelAnimationFrame(rafRef.current);
+      setMicLevel(0);
+      setMicDb(-100);
       return;
     }
+    let lastUiUpdate = 0;
     const tick = () => {
-      const m = audio.meter.current;
-      if (m.db > -100) {
-        const level = Math.max(5, Math.min(100, m.db + 100));
+      let db = -100;
+      let speaking = false;
+      if (liveMic) {
+        const m = audio.meter.current;
+        db = m.db;
+        speaking = Boolean(m.vad);
+      } else if (previewMicRef.current) {
+        const { analyser, samples } = previewMicRef.current;
+        analyser.getByteTimeDomainData(samples as any);
+        let sum = 0;
+        for (let i = 0; i < samples.length; i++) {
+          const value = (samples[i] - 128) / 128;
+          sum += value * value;
+        }
+        const rms = Math.sqrt(sum / samples.length);
+        db = rms > 0 ? 20 * Math.log10(rms) : -100;
+        speaking = db > -48;
+      }
+      const level = Math.max(0, Math.min(100, ((db + 60) / 52) * 100));
+      if (liveMic && db > -100) {
         setPeople(prev => prev.map(p =>
           p.name === self
-            ? { ...p, level, state: m.vad ? "speaking" : "connected" }
+            ? { ...p, level, state: speaking ? "speaking" : "connected" }
             : p
         ));
+      }
+      if (performance.now() - lastUiUpdate >= 50) {
+        lastUiUpdate = performance.now();
+        setMicLevel(level);
+        setMicDb(db);
       }
       rafRef.current = requestAnimationFrame(tick);
     };
     rafRef.current = requestAnimationFrame(tick);
     return () => cancelAnimationFrame(rafRef.current);
-  }, [audio.status, self]);
+  }, [audio.status, audio.meter, previewMicOn, self]);
 
   // ── Helpers ───────────────────────────────────────────────────────────────
   function addSelf() {
@@ -372,6 +418,11 @@ export default function Home() {
 
   function leaveRoom() {
     audio.stop();
+    previewMicRef.current?.stream.getTracks().forEach(track => track.stop());
+    previewMicRef.current?.context.close().catch(() => {});
+    previewMicRef.current = null;
+    setPreviewMicOn(false);
+    setMicLevel(0);
     isPreviewRef.current = false;
     cancelAnimationFrame(rafRef.current);
     setPhase("join");
@@ -383,32 +434,50 @@ export default function Home() {
   }
 
   async function toggleMic() {
+    if (previewMicOn) {
+      previewMicRef.current?.stream.getTracks().forEach(track => track.stop());
+      previewMicRef.current?.context.close().catch(() => {});
+      previewMicRef.current = null;
+      setPreviewMicOn(false);
+      return;
+    }
     if (audio.status === "live") {
-      // If already live, just toggle off (leave session)
-      leaveRoom();
-    } else if (audio.status === "idle" && wsUrl) {
+      audio.mute();
+      setPeople(prev => prev.map(person => person.name === self ? { ...person, level: 0, state: "connected" } : person));
+    } else if ((audio.status === "idle" || audio.status === "muted") && wsUrl) {
       // Re-enable mic in an active real session
       try { await audio.start(); }
       catch { setUiError("Microphone access is blocked. Allow it in your browser settings and try again."); }
     } else {
       // Preview mode — just request mic permission for UI feedback
       try {
-        await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: false, noiseSuppression: false, autoGainControl: true } });
+        const stream = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: false, noiseSuppression: false, autoGainControl: true } });
+        const context = new AudioContext();
+        const analyser = context.createAnalyser();
+        analyser.fftSize = 256;
+        context.createMediaStreamSource(stream).connect(analyser);
+        previewMicRef.current = { stream, context, analyser, samples: new Uint8Array(analyser.fftSize) };
+        await context.resume();
+        setPreviewMicOn(true);
         setUiError("");
       } catch {
+        previewMicRef.current?.stream.getTracks().forEach(track => track.stop());
+        previewMicRef.current?.context.close().catch(() => {});
+        previewMicRef.current = null;
         setUiError("Microphone access is blocked. Allow it in your browser settings and try again.");
       }
     }
   }
 
   // ── Derived state ─────────────────────────────────────────────────────────
-  const micOn = audio.status === "live";
+  const micOn = audio.status === "live" || previewMicOn;
+  const micLevelClass = micLevel >= 88 ? "mic-level-hot" : micLevel >= 68 ? "mic-level-warm" : "";
   const error = uiError;
   const activeIndex = Math.max(0, people.findIndex(p => p.state === "speaking"));
 
   // ── Render ────────────────────────────────────────────────────────────────
   return (
-    <main className={`${highContrast ? "high-contrast" : ""} ${phoneView ? "phone-preview" : ""}`}>
+    <main className={phoneView ? "phone-preview" : ""}>
       <header className={`topbar ${phase === "join" ? "topbar-landing" : ""}`}>
         <a className="brand" href="/" aria-label="Roundtable home">
           <span className="brand-glyph" aria-hidden="true"><i /><i /><i /></span>
@@ -479,6 +548,26 @@ export default function Home() {
           <div className="session-grid">
             <div className="session-left">
               <RoomModel people={people} activeIndex={activeIndex} />
+              <section className={`mic-control ${micOn ? "mic-live" : ""} ${micLevelClass}`} aria-label="Microphone controls">
+                <div className="mic-control-copy">
+                  <span className={`mic-status-dot ${micOn ? "active" : ""}`} />
+                  <div>
+                    <b>{micOn ? "Microphone on" : "Your microphone"}</b>
+                    <small>{micOn ? `${micDb > -99 ? `${Math.round(micDb)} dB` : "Listening for sound"} · ${audio.status === "live" ? `ASR ${audio.asrStatus}` : "local level preview"}` : "Mic stays off until you turn it on"}</small>
+                  </div>
+                </div>
+                <div className="mic-waveform" role="img" aria-label={micOn ? `Microphone level ${Math.round(micLevel)} percent` : "Microphone off"}>
+                  {Array.from({ length: 25 }, (_, index) => {
+                    const shape = .2 + .8 * Math.abs(Math.sin((index + 2) * 1.17));
+                    const height = micOn ? Math.max(4, 4 + micLevel * (.12 + shape * .3)) : 4;
+                    return <i key={index} style={{ height: `${height}px` }} />;
+                  })}
+                </div>
+                <button type="button" aria-pressed={micOn} className={`mic-button ${micOn ? "on" : ""}`} onClick={toggleMic}>
+                  {micOn ? "Turn mic off" : "Turn mic on"}<span>{micOn ? "■" : "●"}</span>
+                </button>
+                {error && <p className="mic-error" role="alert">{error}</p>}
+              </section>
               <div className="participant-panel">
                 <div className="panel-heading">
                   <span className="micro-label">AT THE TABLE</span>
@@ -505,7 +594,6 @@ export default function Home() {
                 </div>
                 <div className="transcript-tools">
                   <label className="text-size-control">Aa <input aria-label="Caption text size" type="range" min=".9" max="1.4" step=".1" value={fontScale} onChange={e => setFontScale(Number(e.target.value))} /></label>
-                  <button className="contrast-button" aria-pressed={highContrast} onClick={() => setHighContrast(!highContrast)} title="Toggle high contrast">◐</button>
                 </div>
               </div>
 
@@ -521,22 +609,6 @@ export default function Home() {
                 ))}
               </div>
 
-              <div className="mic-dock">
-                <div className={`mic-indicator ${micOn ? "mic-on" : ""}`}>
-                  <span />
-                  <div>
-                    <b>{micOn ? "Microphone active · sending audio" : "You're listening"}</b>
-                    <small>
-                      {micOn
-                        ? `ASR: ${audio.asrStatus} · mode: ${audio.mode}`
-                        : "Turn on your mic to start sending audio"}
-                    </small>
-                  </div>
-                </div>
-                <button className={`mic-button ${micOn ? "on" : ""}`} onClick={toggleMic}>
-                  {micOn ? "Turn mic off" : "Turn mic on"}<span>{micOn ? "■" : "●"}</span>
-                </button>
-              </div>
             </div>
           </div>
 

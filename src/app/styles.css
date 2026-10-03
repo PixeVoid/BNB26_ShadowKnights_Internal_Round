@@ -842,14 +842,6 @@ main {
   accent-color: #8055e8;
   height: 3px;
 }
-.contrast-button {
-  width: 27px;
-  height: 27px;
-  border: 1px solid #d4d2dc;
-  background: #f8f7fa;
-  border-radius: 50%;
-  cursor: pointer;
-}
 .caption-list {
   flex: 1;
   overflow-y: auto;
@@ -1001,17 +993,6 @@ main {
     opacity: 1;
     transform: none;
   }
-}
-.high-contrast {
-  --bg: #fff;
-  --surface: #fff;
-  --surface-soft: #f1f1f4;
-  --ink: #101015;
-  --muted: #393943;
-  --line: #777;
-}
-.high-contrast .caption p {
-  color: #222;
 }
 .phone-preview {
   background: #e0dee7;
@@ -1425,7 +1406,7 @@ main {
 .mic-indicator.mic-on>span {
   background: #d8e6e7;
 }
-.contrast-button, .text-size-control input {
+.text-size-control input {
   accent-color: #527e90;
 }
 @media (max-width:680px) {
@@ -2181,4 +2162,130 @@ main.phone-preview .landing-card .primary-button { min-height: 38px; }
   .participant-panel { padding: 13px; }
   .landing-card { padding: 17px 16px 15px; }
   .landing-card .join-head h2 { font-size: 23px; }
+}
+
+/* Microphone controls live with the room signal, where its level can be read. */
+.mic-control {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  grid-template-rows: auto 35px;
+  align-items: center;
+  gap: 8px 15px;
+  padding: 12px 15px;
+  border: 1px solid #d5d3ca;
+  border-radius: var(--ui-radius-md);
+  background: #fbfaf6d9;
+  box-shadow: var(--ui-shadow);
+  transition: border-color .2s ease, background .2s ease;
+}
+.mic-control.mic-live {
+  border-color: #c8d8d9;
+  background: linear-gradient(110deg, #f9faf5, #f3f7f4 70%, #f8f4f7);
+}
+.mic-control-copy {
+  grid-column: 1;
+  grid-row: 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.mic-control-copy b {
+  display: block;
+  font-size: 11px;
+  font-weight: 600;
+}
+.mic-control-copy small {
+  display: block;
+  margin-top: 3px;
+  color: #777770;
+  font: 8px var(--mono);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.mic-status-dot {
+  flex: 0 0 8px;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #bbb9b1;
+}
+.mic-status-dot.active {
+  background: #55bca4;
+  box-shadow: 0 0 0 4px #55bca420;
+  animation: mic-pulse 1.8s ease-in-out infinite;
+}
+@keyframes mic-pulse {
+  50% { box-shadow: 0 0 0 7px #55bca40c; }
+}
+.mic-waveform {
+  grid-column: 1 / -1;
+  grid-row: 2;
+  min-width: 0;
+  height: 38px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  overflow: hidden;
+  border-radius: 8px;
+  background: #eeede7;
+}
+.mic-waveform i {
+  width: 4px;
+  min-height: 4px;
+  max-height: 32px;
+  border-radius: 999px;
+  background: #c5c4bd;
+  transition: height 90ms linear, background .2s ease;
+}
+.mic-live .mic-waveform i {
+  background: #648a70;
+  box-shadow: none;
+}
+.mic-level-warm .mic-waveform i {
+  background: #b58a4c;
+}
+.mic-level-hot .mic-waveform i {
+  background: #b76558;
+}
+.mic-control .mic-button {
+  grid-column: 2;
+  grid-row: 1;
+  min-width: 116px;
+  padding-inline: 12px;
+}
+.mic-control .mic-button.on {
+  background: #e7f3f1;
+  border-color: #94c9bc;
+}
+.mic-error {
+  grid-column: 1 / -1;
+  grid-row: 3;
+  margin: 0;
+  color: #a14d42;
+  font-size: 10px;
+}
+.transcript-tools { min-height: 34px; }
+main.phone-preview .mic-control {
+  gap: 7px 10px;
+  padding: 10px 11px;
+}
+main.phone-preview .mic-control-copy b { font-size: 10px; }
+main.phone-preview .mic-control-copy small { font-size: 7px; }
+main.phone-preview .mic-control .mic-button {
+  min-width: 101px;
+  padding-inline: 9px;
+  font-size: 9px;
+}
+main.phone-preview .mic-waveform { height: 32px; gap: 3px; }
+main.phone-preview .mic-waveform i { width: 3px; max-height: 27px; }
+@media (max-width: 680px) {
+  .mic-control { gap: 7px 10px; padding: 10px 11px; }
+  .mic-control-copy b { font-size: 10px; }
+  .mic-control-copy small { font-size: 7px; }
+  .mic-control .mic-button { min-width: 101px; padding-inline: 9px; font-size: 9px; }
+  .mic-waveform { height: 32px; gap: 3px; }
+  .mic-waveform i { width: 3px; max-height: 27px; }
 }

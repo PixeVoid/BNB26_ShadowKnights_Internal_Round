@@ -23,6 +23,7 @@ export class AudioClient {
   private base = Infinity; // performance.now() - audioContextTimeMs (min-filtered)
   private silentFrames = 0;
   private silentReported = false;
+  private pcmEnabled = false;
   private o: AudioClientOptions;
 
   /** latest frame, handy for meters */
@@ -84,7 +85,13 @@ export class AudioClient {
 
   /** Switch the 16 kHz PCM stream on/off (fallback when Web Speech can't coexist with the mic). */
   setPcm(on: boolean) {
-    this.node?.port.postMessage({ type: 'pcm', on });
+    this.pcmEnabled = on;
+    this.node?.port.postMessage({ type: 'pcm', on: on && this.stream?.getAudioTracks().some((track) => track.enabled) !== false });
+  }
+
+  setEnabled(enabled: boolean) {
+    this.stream?.getAudioTracks().forEach((track) => { track.enabled = enabled; });
+    this.node?.port.postMessage({ type: 'pcm', on: enabled && this.pcmEnabled });
   }
 
   stop() {
@@ -97,6 +104,7 @@ export class AudioClient {
     this.stream = undefined;
     this.ctx = undefined;
     this.pending = [];
+    this.pcmEnabled = false;
   }
 
   private onVisible = () => {

@@ -29,7 +29,7 @@ export function useRoundtableAudio(cfg: RoundtableAudioConfig) {
   const cfgRef = useRef(cfg);
   cfgRef.current = cfg;
 
-  const [status, setStatus] = useState<'idle' | 'starting' | 'live' | 'error'>('idle');
+  const [status, setStatus] = useState<'idle' | 'starting' | 'live' | 'muted' | 'error'>('idle');
   const [conn, setConn] = useState<ConnState>('closed');
   const [asrStatus, setAsrStatus] = useState<AsrStatus>('idle');
   const [mode, setMode] = useState<'webspeech' | 'pcm'>('webspeech');
@@ -52,7 +52,12 @@ export function useRoundtableAudio(cfg: RoundtableAudioConfig) {
   }, []);
 
   const start = useCallback(async () => {
-    if (parts.current.audio) return;
+    if (parts.current.audio) {
+      parts.current.audio.setEnabled(true);
+      parts.current.asr?.start();
+      setStatus('live');
+      return;
+    }
     setStatus('starting');
     setError(null);
 
@@ -138,6 +143,12 @@ export function useRoundtableAudio(cfg: RoundtableAudioConfig) {
     setStatus('live');
   }, []);
 
+  const mute = useCallback(() => {
+    parts.current.audio?.setEnabled(false);
+    parts.current.asr?.stop();
+    setStatus('muted');
+  }, []);
+
   useEffect(() => stop, [stop]);
 
   return {
@@ -149,6 +160,7 @@ export function useRoundtableAudio(cfg: RoundtableAudioConfig) {
     meter,
     start,
     stop,
+    mute,
     send: (m: unknown) => parts.current.link?.send(m),
   };
 }
