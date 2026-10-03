@@ -36,6 +36,12 @@ function wsOrigin(base: string) {
 function initials(name: string) {
   return name.trim().split(/\s+/).slice(0, 2).map((s) => s[0]?.toUpperCase()).join("") || "?";
 }
+function MicIcon() {
+  return <svg viewBox="0 0 24 24" focusable="false" aria-hidden="true">
+    <rect x="8" y="3" width="8" height="12" rx="4" />
+    <path d="M5 11a7 7 0 0 0 14 0M12 18v3M9 21h6" />
+  </svg>;
+}
 function getCaptionKey(caption: Caption) { return caption.id || (caption.seq !== undefined ? `${caption.speaker}:${caption.seq}` : undefined); }
 
 function Phone({ person, index, active }: { person: Person; index: number; active?: boolean }) {
@@ -841,7 +847,7 @@ export default function Home() {
               <RoomModel people={people} activeIndex={activeIndex} />
               <section className={`mic-control ${micOn ? "mic-live" : ""} ${micLevelClass}`} aria-label="Microphone controls">
                 <div className="mic-control-copy">
-                  <span className={`mic-status-dot ${micOn ? "active" : ""}`} />
+                  <span className={`mic-icon ${micOn ? "active" : ""}`}><MicIcon /></span>
                   <div>
                     <b>{micOn ? "Microphone on" : "Your microphone"}</b>
                     <small>{micOn ? `${micDb > -99 ? `${Math.round(micDb)} dB` : "Listening for sound"} · ${audio.status === "live" ? `ASR ${audio.asrStatus}` : "local level preview"}` : "Mic stays off until you turn it on"}</small>

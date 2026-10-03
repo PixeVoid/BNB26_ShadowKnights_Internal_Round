@@ -2649,3 +2649,41 @@ main.phone-preview .mic-waveform i { width: 3px; max-height: 27px; }
 @media (max-width: 420px) {
   .diagnostics-status-grid { grid-template-columns: 1fr; }
 }
+
+/* Semantic action colors and a visible microphone mark shared by every view. */
+.mic-icon {
+  width: 28px;
+  height: 28px;
+  flex: 0 0 28px;
+  display: grid;
+  place-items: center;
+  border: 1px solid #c9c8c0;
+  border-radius: 50%;
+  background: #f1f0ea;
+  color: #7d8179;
+}
+.mic-icon svg { width: 15px; height: 15px; fill: none; stroke: currentColor; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
+.mic-icon.active {
+  border-color: #8bc9b6;
+  background: #e4f4ee;
+  color: #328b70;
+  box-shadow: 0 0 0 4px #55bca41a;
+}
+.connection-pill.connected { color: #477864; }
+.connection-pill.connected i { background: #54ad88; box-shadow: 0 0 0 3px #54ad8820; }
+.room-code-button { color: #416f78; background: #eef7f6; border-color: #b9d8d7; }
+.share-button { color: #476882; background: #f0f5f8; border-color: #bfd0da; }
+.leave-button { color: #9a4f48; background: #fff5f2; border: 1px solid #e5bdb6; }
+.leave-button:hover { color: #823a35; border-color: #ca8178; background: #ffebe7; }
+.leave-button span { color: #b35e56; }
+.ai-room-card .end-meeting-button { color: #7b5b28; background: #fff6df; border-color: #dec28b; }
+.ai-room-card .end-meeting-button:hover:not(:disabled) { background: #ffedbf; border-color: #c59c50; }
+.roundtable-modal .end-meeting-button,
+.roundtable-modal .modal-danger { color: #fff9f7; background: #b5544c; border-color: #99443d; }
+.roundtable-modal .end-meeting-button:hover:not(:disabled),
+.roundtable-modal .modal-danger:hover:not(:disabled) { background: #963e38; border-color: #80352f; }
+.vote-continue { color: #a24d45; }
+.vote-end { color: #3e8066; }
+.meeting-notice { color: #886734; }
+.ai-stage-error .meeting-notice { color: #a24d45; }
+main.phone-preview .mic-icon { width: 25px; height: 25px; flex-basis: 25px; }
