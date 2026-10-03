@@ -1911,3 +1911,274 @@ main {
     animation: none !important;
   }
 }
+
+/* Phone view is a complete handset viewport, including its own masthead. */
+main.phone-preview {
+  width: min(390px, calc(100vw - 40px));
+  height: min(844px, calc(100dvh - 48px));
+  min-height: min(620px, calc(100dvh - 48px));
+  margin: 24px auto;
+  overflow-x: hidden;
+  overflow-y: auto;
+  border: 1px solid #77766f;
+  border-radius: 30px;
+  background: var(--bg);
+  box-shadow: 0 24px 70px #17171330, 0 0 0 6px #292a2730;
+  scrollbar-width: thin;
+  scrollbar-color: #aaa9a2 transparent;
+}
+main.phone-preview .topbar,
+main.phone-preview .topbar-landing {
+  height: 62px;
+  min-height: 62px;
+  padding-inline: 16px;
+}
+main.phone-preview .brand { gap: 8px; }
+main.phone-preview .brand-glyph { width: 27px; height: 27px; }
+main.phone-preview .edition { display: none; }
+main.phone-preview .view-toggle {
+  min-height: 34px;
+  padding-inline: 10px;
+  font-size: 9px;
+  gap: 7px;
+}
+main.phone-preview .session-shell {
+  max-width: none;
+  min-height: calc(100% - 62px);
+  padding: 22px 15px;
+}
+main.phone-preview .session-top {
+  align-items: flex-start;
+  flex-direction: column;
+  gap: 15px;
+}
+main.phone-preview .session-top h1 { font-size: 31px; }
+main.phone-preview .session-actions {
+  width: 100%;
+  gap: 5px;
+  flex-wrap: wrap;
+}
+main.phone-preview .connection-pill { margin-right: auto; }
+main.phone-preview .quiet-button { height: 31px; padding-inline: 8px; font-size: 9px; }
+main.phone-preview .session-grid {
+  grid-template-columns: 1fr;
+  padding-top: 14px;
+  gap: 13px;
+}
+main.phone-preview .session-left .model-window { height: 258px; }
+main.phone-preview .room-scene { transform: scale(.86) rotateX(calc(61deg + var(--tilt-x,0deg))) rotateZ(calc(-35deg + var(--tilt-y,0deg))); }
+main.phone-preview .participant-panel { padding: 13px; }
+main.phone-preview .participant-list { grid-template-columns: 1fr 1fr; gap: 8px 5px; }
+main.phone-preview .participant {
+  grid-template-columns: 27px minmax(38px, 1fr) auto;
+  gap: 5px;
+}
+main.phone-preview .participant .meter { display: none; }
+main.phone-preview .transcript-panel { min-height: 530px; }
+main.phone-preview .transcript-heading { padding: 13px; }
+main.phone-preview .caption-list { padding: 3px 13px 11px; }
+main.phone-preview .caption { padding: 13px 0; }
+main.phone-preview .caption p { margin-left: 13px; }
+main.phone-preview .mic-dock { padding: 10px 9px; }
+main.phone-preview .mic-button { min-width: 107px; padding-inline: 10px; }
+main.phone-preview .session-foot { display: none; }
+main.phone-preview .wake-screen { min-height: calc(100% - 62px); padding: 28px 22px; }
+main.phone-preview .landing-stage {
+  width: 100%;
+  height: calc(100% - 62px);
+  min-height: 640px;
+}
+main.phone-preview .landing-stage .mascot-handle {
+  bottom: -2%;
+  height: 60%;
+  width: 77%;
+}
+main.phone-preview .landing-stage .mascot-cat { left: -19%; }
+main.phone-preview .landing-stage .mascot-rabbit { right: -16%; width: 75%; }
+main.phone-preview .landing-stage .mascot-speaker {
+  left: 50%;
+  bottom: 0;
+  width: 48%;
+  height: 54%;
+  transform: translateX(-50%) scale(.82);
+}
+main.phone-preview .landing-card {
+  top: 5%;
+  left: 50%;
+  width: calc(100% - 36px);
+  padding: 16px 17px 14px;
+  transform: translateX(-50%);
+  pointer-events: auto;
+}
+main.phone-preview .landing-card .join-head { margin-bottom: 7px; }
+main.phone-preview .landing-card .join-head h2 { font-size: 23px; }
+main.phone-preview .landing-card .join-intro { margin-bottom: 12px; font-size: 9px; }
+main.phone-preview .landing-card .field-label { margin-bottom: 4px; }
+main.phone-preview .landing-card input { height: 35px; }
+main.phone-preview .landing-card .room-label { margin-top: 10px; }
+main.phone-preview .landing-card .primary-button { height: 37px; margin-top: 14px; }
+main.phone-preview .landing-card .privacy-note { margin-top: 9px; font-size: 7px; }
+@media (max-width: 680px) {
+  main.phone-preview {
+    width: 100%;
+    height: 100dvh;
+    min-height: 100dvh;
+    margin: 0;
+    border: 0;
+    border-radius: 0;
+    box-shadow: none;
+  }
+}
+
+/* A shared, softer visual system across the room and join experience. */
+:root {
+  --ui-radius-sm: 10px;
+  --ui-radius-md: 16px;
+  --ui-radius-lg: 22px;
+  --ui-edge: #d5d3ca;
+  --ui-shadow: 0 12px 34px #36352c0d, 0 2px 7px #36352c08;
+}
+.session-top {
+  border-color: #d3d1c8;
+}
+.session-top h1 {
+  font-size: clamp(30px, 3vw, 38px);
+}
+.preview-banner {
+  border: 1px solid #d4dce0;
+  border-radius: var(--ui-radius-sm);
+  background: linear-gradient(110deg, #eaf0f0, #f1f0eb 76%);
+  padding: 12px 15px;
+  line-height: 1.55;
+}
+.session-left .model-window {
+  border: 1px solid var(--ui-edge);
+  border-radius: var(--ui-radius-md);
+  background-color: #f4f2ec;
+  box-shadow: var(--ui-shadow);
+}
+.participant-panel,
+.transcript-panel {
+  border: 1px solid var(--ui-edge);
+  border-radius: var(--ui-radius-md);
+  background: #fbfaf6d9;
+  box-shadow: var(--ui-shadow);
+}
+.transcript-heading {
+  padding: 19px 20px 16px;
+  border-radius: var(--ui-radius-md) var(--ui-radius-md) 0 0;
+  background: #ffffff55;
+}
+.caption-list {
+  padding-inline: 20px;
+}
+.caption {
+  padding-block: 17px 15px;
+  border-color: #e5e2d9;
+}
+.caption:last-child { border-bottom: 0; }
+.caption p {
+  line-height: 1.7;
+}
+.mic-dock {
+  border-radius: 0 0 var(--ui-radius-md) var(--ui-radius-md);
+  background: #ffffff52;
+}
+.mic-button {
+  min-height: 42px;
+  border-radius: 11px;
+  transition: transform .18s ease, box-shadow .18s ease, background .18s ease;
+}
+.mic-button:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px #45667524;
+}
+.quiet-button {
+  border-radius: 999px;
+  transition: border-color .18s ease, background .18s ease;
+}
+.leave-button {
+  border: 1px solid transparent;
+}
+.leave-button:hover {
+  background: #f0eeea;
+  border-color: #d6d3ca;
+}
+.participant-panel {
+  padding: 17px 19px;
+}
+.participant {
+  padding: 4px 7px 4px 4px;
+  border-radius: 999px;
+  transition: background .18s ease;
+}
+.participant:hover { background: #ffffff94; }
+.avatar {
+  box-shadow: inset 0 0 0 1px #ffffffa6;
+}
+.join-card {
+  pointer-events: auto;
+}
+.landing-card::before {
+  border: 1px solid #d2d0c7;
+  border-radius: var(--ui-radius-lg);
+  background: #f8f7f1ed;
+  box-shadow: 0 18px 48px #302f2818, inset 0 1px 0 #ffffff;
+  backdrop-filter: blur(15px);
+}
+.landing-card {
+  padding: 28px 27px 24px;
+}
+.landing-card .join-head h2 {
+  font-size: 29px;
+  letter-spacing: -.055em;
+}
+.landing-card input {
+  height: 43px;
+  border: 1px solid #deddd6;
+  border-radius: var(--ui-radius-sm);
+  background: #fffefa;
+  padding-inline: 13px;
+  transition: border-color .18s ease, box-shadow .18s ease;
+}
+.landing-card input:focus {
+  border-color: #7ea0aa;
+  box-shadow: 0 0 0 3px #7ea0aa22;
+}
+.primary-button {
+  min-height: 44px;
+  border-radius: 11px;
+  box-shadow: 0 5px 13px #45667520;
+  transition: transform .18s ease, box-shadow .18s ease;
+}
+.primary-button:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 8px 18px #4566752b;
+}
+main.phone-preview .session-shell {
+  padding: 18px 13px;
+}
+main.phone-preview .session-top { gap: 11px; padding-bottom: 15px; }
+main.phone-preview .session-top h1 { font-size: 29px; }
+main.phone-preview .session-grid { gap: 11px; padding-block: 12px; }
+main.phone-preview .session-left { gap: 10px; }
+main.phone-preview .session-left .model-window { height: 218px; }
+main.phone-preview .participant-panel { padding: 11px; }
+main.phone-preview .transcript-panel { min-height: 440px; }
+main.phone-preview .transcript-heading { padding: 12px; }
+main.phone-preview .caption-list { padding-inline: 13px; }
+main.phone-preview .caption { padding-block: 12px; }
+main.phone-preview .landing-card {
+  width: calc(100% - 48px);
+  padding: 15px 16px 13px;
+}
+main.phone-preview .landing-card .join-head h2 { font-size: 21px; }
+main.phone-preview .landing-card input { height: 37px; }
+main.phone-preview .landing-card .primary-button { min-height: 38px; }
+@media (max-width: 680px) {
+  .transcript-heading { padding: 13px; }
+  .caption-list { padding-inline: 13px; }
+  .participant-panel { padding: 13px; }
+  .landing-card { padding: 17px 16px 15px; }
+  .landing-card .join-head h2 { font-size: 23px; }
+}
