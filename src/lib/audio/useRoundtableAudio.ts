@@ -119,7 +119,7 @@ export function useRoundtableAudio(cfg: RoundtableAudioConfig) {
       setStatus('error');
       link.close();
       parts.current = {};
-      return;
+      throw e;
     }
 
     const asr = new AsrClient({

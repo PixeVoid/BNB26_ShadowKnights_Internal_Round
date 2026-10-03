@@ -3,9 +3,10 @@
 import { FormEvent, useCallback, useEffect, useRef, useState } from "react";
 import { flushSync } from "react-dom";
 import { useRoundtableAudio } from "../lib/audio/useRoundtableAudio";
+import { captionsToSrt, captionsToVtt, makeRoomCode } from "../lib/roomTools.mjs";
 
 type Phase = "join" | "connecting" | "live";
-type Caption = { speaker: string; text: string; time: string; draft?: boolean; confidence?: "low"; id?: string };
+type Caption = { speaker: string; text: string; time: string; draft?: boolean; final?: boolean; confidence?: "low"; id?: string; seq?: number; t0?: number; t1?: number };
 type Person = { name: string; color: string; state: string; level: number };
 
 const palette = ["#bb83ff", "#77d6bd", "#ffc86b", "#ff806c", "#7da8ff", "#f28bd3"];
@@ -28,7 +29,7 @@ function wsOrigin(base: string) {
 function initials(name: string) {
   return name.trim().split(/\s+/).slice(0, 2).map((s) => s[0]?.toUpperCase()).join("") || "?";
 }
-function makeCode() { return Math.random().toString(36).slice(2, 6).toUpperCase(); }
+function getCaptionKey(caption: Caption) { return caption.id || (caption.seq !== undefined ? `${caption.speaker}:${caption.seq}` : undefined); }
 
 function Phone({ person, index, active }: { person: Person; index: number; active?: boolean }) {
   return (
@@ -200,12 +201,15 @@ export default function Home() {
   const [roomCode, setRoomCode] = useState("");
   const [wsUrl, setWsUrl] = useState("");
   const [people, setPeople] = useState<Person[]>([]);
-  const [captions, setCaptions] = useState<Caption[]>(starter);
+  const [captions, setCaptions] = useState<Caption[]>([]);
   const [status, setStatus] = useState("Ready when you are");
   const [uiError, setUiError] = useState("");
   const [connection, setConnection] = useState<"idle" | "waking" | "connected" | "preview">("idle");
   const [fontScale, setFontScale] = useState(1);
   const [phoneView, setPhoneView] = useState(false);
+  const [shareNotice, setShareNotice] = useState("");
+  const [calibration, setCalibration] = useState<{ mine: boolean; speaker: string } | null>(null);
+  const calibrationTimer = useRef<number | null>(null);
   const [previewMicOn, setPreviewMicOn] = useState(false);
   const [micLevel, setMicLevel] = useState(0);
   const [micDb, setMicDb] = useState(-100);
@@ -216,12 +220,22 @@ export default function Home() {
 
   useEffect(() => {
     setBackend(apiOrigin());
+    const params = new URLSearchParams(window.location.search);
+    const sharedRoom = params.get("room");
+    if (sharedRoom) setRoom(sharedRoom.toUpperCase().slice(0, 8));
+    const savedView = window.localStorage.getItem("roundtable-view");
+    setPhoneView(savedView ? savedView === "phone" : window.matchMedia("(max-width: 680px)").matches);
     return () => {
+      if (calibrationTimer.current !== null) window.clearTimeout(calibrationTimer.current);
       previewMicRef.current?.stream.getTracks().forEach(track => track.stop());
       previewMicRef.current?.context.close().catch(() => {});
       previewMicRef.current = null;
     };
   }, []);
+
+  useEffect(() => {
+    window.localStorage.setItem("roundtable-view", phoneView ? "phone" : "full");
+  }, [phoneView]);
 
   const self = name || "You";
 
@@ -265,16 +279,21 @@ export default function Home() {
       const segment = data.segment || data;
       const speaker = segment.speaker || "Room";
       setCaptions(prev => {
+        const stableId = segment.id || (Number.isFinite(segment.seq) ? `${segment.dev || speaker}:${segment.seq}` : undefined);
         const item: Caption = {
           speaker,
           text: segment.text || "",
           time: new Date().toLocaleTimeString([], { minute: "2-digit", second: "2-digit" }),
+          final: segment.final !== false,
           draft: segment.final === false,
-          confidence: segment.conf < 0.55 ? "low" : undefined,
+          confidence: typeof segment.conf === "number" && segment.conf < 0.55 ? "low" : undefined,
+          seq: Number.isFinite(segment.seq) ? segment.seq : undefined,
+          t0: Number.isFinite(segment.t0) ? segment.t0 : undefined,
+          t1: Number.isFinite(segment.t1) ? segment.t1 : undefined,
         };
-        const key = segment.id;
-        const index = key ? prev.findIndex((c: any) => (c as any).id === key) : -1;
-        const stamped = Object.assign(item, { id: key });
+        const key = stableId;
+        const index = key ? prev.findIndex(c => getCaptionKey(c) === key) : -1;
+        const stamped = Object.assign(item, { id: stableId });
         if (index >= 0) { const next = [...prev]; next[index] = stamped; return next.slice(-30); }
         return [...prev, stamped].slice(-30);
       });
@@ -290,7 +309,11 @@ export default function Home() {
     wsUrl,
     name,
     onServerMessage: handleServerMessage,
-    onCalibTurn: (_m: any, _mine: boolean) => { /* calibration UI can be added here */ },
+    onCalibTurn: (message, mine) => {
+      if (calibrationTimer.current !== null) window.clearTimeout(calibrationTimer.current);
+      setCalibration({ mine, speaker: message.speaker });
+      calibrationTimer.current = window.setTimeout(() => setCalibration(null), 12_000);
+    },
   });
 
   // Map hook conn state → our UI connection state (skip in preview mode)
@@ -372,7 +395,7 @@ export default function Home() {
     setUiError("");
     if (!name.trim()) { setUiError("Add your name so the room can label your captions."); return; }
 
-    const code = room.trim().toUpperCase() || makeCode();
+    const code = room.trim().toUpperCase() || makeRoomCode();
     setRoomCode(code);
     setPhase("connecting");
     setConnection("waking");
@@ -383,6 +406,8 @@ export default function Home() {
     if (!origin) {
       isPreviewRef.current = true;
       setConnection("preview");
+      setCaptions(starter);
+      setCalibration(null);
       addSelf();
       setPeople(prev => prev.length > 1 ? prev : [
         ...prev,
@@ -398,6 +423,9 @@ export default function Home() {
 
     // ── Real backend ───────────────────────────────────────────────────────
     try {
+      setPeople([]);
+      setCaptions([]);
+      setCalibration(null);
       const res = await fetch(`${origin}/health`, { signal: AbortSignal.timeout(90000), cache: "no-store" });
       if (!res.ok) throw new Error("Health check failed");
       setStatus("Server is awake · joining room…");
@@ -408,11 +436,16 @@ export default function Home() {
       flushSync(() => setWsUrl(`${wsOrigin(origin)}/ws/${encodeURIComponent(code)}`));
       addSelf();
       await audio.start();
-    } catch {
+    } catch (error) {
       setConnection("idle");
       setPhase("join");
       setStatus("Ready when you are");
-      setUiError("Could not wake the server. It may be starting up; wait a minute, then try again.");
+      const reason = error instanceof Error ? error.name : "";
+      setUiError(reason === "NotAllowedError"
+        ? "Microphone permission was denied. Allow access in your browser settings, then try again."
+        : reason === "NotFoundError"
+          ? "No microphone was found. Connect a microphone, then try again."
+          : "Could not wake the server. It may be starting up; wait a minute, then try again.");
     }
   }
 
@@ -430,7 +463,12 @@ export default function Home() {
     setUiError("");
     setStatus("Ready when you are");
     setPeople([]);
+    setCaptions([]);
+    setCalibration(null);
+    if (calibrationTimer.current !== null) window.clearTimeout(calibrationTimer.current);
+    calibrationTimer.current = null;
     setWsUrl("");
+    setRoomCode("");
   }
 
   async function toggleMic() {
@@ -467,6 +505,51 @@ export default function Home() {
         setUiError("Microphone access is blocked. Allow it in your browser settings and try again.");
       }
     }
+  }
+
+  function inviteUrl() {
+    const url = new URL(window.location.href);
+    url.searchParams.set("room", roomCode);
+    return url.toString();
+  }
+
+  async function shareRoom() {
+    if (!roomCode || connection === "preview") return;
+    const url = inviteUrl();
+    try {
+      if (navigator.share) await navigator.share({ title: `Roundtable room ${roomCode}`, text: `Join my Roundtable room with code ${roomCode}.`, url });
+      else {
+        await navigator.clipboard.writeText(url);
+        setShareNotice("Invite link copied");
+      }
+    } catch (error) {
+      if (error instanceof Error && error.name === "AbortError") return;
+      setShareNotice("Could not share. Copy the room code instead.");
+    }
+    window.setTimeout(() => setShareNotice(""), 3500);
+  }
+
+  async function copyRoomCode() {
+    if (!roomCode || connection === "preview") return;
+    try {
+      await navigator.clipboard.writeText(roomCode);
+      setShareNotice("Room code copied");
+    } catch {
+      setShareNotice(`Room code: ${roomCode}`);
+    }
+    window.setTimeout(() => setShareNotice(""), 3500);
+  }
+
+  function downloadCaptions(format: "vtt" | "srt") {
+    const content = format === "vtt" ? captionsToVtt(captions) : captionsToSrt(captions);
+    if (!content) return;
+    const blob = new Blob([content], { type: format === "vtt" ? "text/vtt;charset=utf-8" : "application/x-subrip;charset=utf-8" });
+    const href = URL.createObjectURL(blob);
+    const anchor = document.createElement("a");
+    anchor.href = href;
+    anchor.download = `roundtable-${roomCode.toLowerCase()}.${format}`;
+    anchor.click();
+    URL.revokeObjectURL(href);
   }
 
   // ── Derived state ─────────────────────────────────────────────────────────
@@ -535,9 +618,15 @@ export default function Home() {
               <span className={`connection-pill ${connection}`}>
                 <i />{connection === "connected" ? "Connected" : connection === "preview" ? "Preview mode" : "Reconnecting"}
               </span>
+              <button className="quiet-button room-code-button" type="button" onClick={copyRoomCode} disabled={connection === "preview"} aria-label={`Copy room code ${roomCode}`}>
+                {roomCode}<span aria-hidden="true">⧉</span>
+              </button>
+              <button className="quiet-button share-button" type="button" onClick={shareRoom} disabled={connection === "preview"}>Share room</button>
               <button className="quiet-button leave-button" onClick={leaveRoom}>Leave room <span>×</span></button>
             </div>
           </div>
+
+          {shareNotice && <div className="share-notice" role="status">{shareNotice}</div>}
 
           {connection === "preview" && (
             <div className="preview-banner">
@@ -568,6 +657,10 @@ export default function Home() {
                 </button>
                 {error && <p className="mic-error" role="alert">{error}</p>}
               </section>
+              {calibration && <div className="calibration-notice" role="status">
+                <b>{calibration.mine ? "Say your name clearly" : "Room calibration"}</b>
+                <span>{calibration.mine ? "Your room is measuring how your voice sounds across the devices." : "A participant is speaking briefly so the room can compare microphone levels."}</span>
+              </div>}
               <div className="participant-panel">
                 <div className="panel-heading">
                   <span className="micro-label">AT THE TABLE</span>
@@ -594,12 +687,15 @@ export default function Home() {
                 </div>
                 <div className="transcript-tools">
                   <label className="text-size-control">Aa <input aria-label="Caption text size" type="range" min=".9" max="1.4" step=".1" value={fontScale} onChange={e => setFontScale(Number(e.target.value))} /></label>
+                  <button className="export-button" type="button" onClick={() => downloadCaptions("vtt")} disabled={!captions.some(c => c.final !== false && !c.draft)}>VTT</button>
+                  <button className="export-button" type="button" onClick={() => downloadCaptions("srt")} disabled={!captions.some(c => c.final !== false && !c.draft)}>SRT</button>
                 </div>
               </div>
 
               <div className="caption-list" style={{ "--caption-scale": fontScale } as React.CSSProperties}>
+                {captions.length === 0 && <p className="caption-empty">{connection === "preview" ? "Sample captions will appear here." : "Waiting for the first caption…"}</p>}
                 {captions.map((c, i) => (
-                  <article className={`caption ${c.draft ? "draft" : ""}`} key={`${c.speaker}-${i}-${c.text}`}>
+                  <article className={`caption ${c.draft ? "draft" : ""}`} key={getCaptionKey(c) || `${c.speaker}-${i}`}>
                     <div className="caption-speaker">
                       <span className="speaker-mark" style={{ background: people.find(p => p.name === c.speaker)?.color || palette[i % palette.length] }} />
                       {c.speaker}<time>{c.time}</time>
