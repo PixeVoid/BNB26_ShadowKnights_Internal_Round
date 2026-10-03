@@ -149,13 +149,16 @@ class RoomState:
 ROOMS: Dict[str, RoomState] = {}
 
 
-@app.websocket("/ws/{room_id}/{dev_id}")
-async def websocket_session(websocket: WebSocket, room_id: str, dev_id: str):
+@app.websocket("/ws/{room_id}")
+async def websocket_session(websocket: WebSocket, room_id: str):
     await websocket.accept()
+    await websocket.send_text(json.dumps({"type": "welcome"}))
 
     if room_id not in ROOMS:
         ROOMS[room_id] = RoomState(room_id)
     room = ROOMS[room_id]
+    
+    dev_id = None
 
     try:
         while True:
@@ -163,6 +166,11 @@ async def websocket_session(websocket: WebSocket, room_id: str, dev_id: str):
             data = json.loads(raw_text)
             msg_type = data.get("type")
             now = time.time()
+            
+            current_dev = data.get("dev", dev_id)
+            if not current_dev:
+                continue
+            dev_id = current_dev
 
             # ---------------- 1. PRESENCE (Join / Reconnect) ----------------
             if msg_type == "presence":
@@ -211,7 +219,7 @@ async def websocket_session(websocket: WebSocket, room_id: str, dev_id: str):
                     "speaker_switched": switched,
                     "overlap": len(active_candidates) > 1,
                     "active_speakers": active_candidates,
-                    "levels_db": {d: round(room.latest_levels[d], 1) for d in room.participants if d in room.latest_levels}
+                    "levels_db": {room.participants.get(d, {}).get("name", d): round(room.latest_levels[d], 1) for d in room.participants if d in room.latest_levels}
                 }
 
                 room.attribution_events.append(event_payload)
