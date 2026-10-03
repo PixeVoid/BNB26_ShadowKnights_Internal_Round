@@ -1,5 +1,7 @@
 # Shadow-Knights
 For Hackathon 
+
+**🚀 Live Demo:** [https://bnb-26-shadow-knights-internal-roun.vercel.app/](https://bnb-26-shadow-knights-internal-roun.vercel.app/)
 Here is the documentation for the Roundtable frontend repository, structured to provide clear navigation for your 12-hour hackathon team.
 
 # Roundtable: Live Captions Frontend
