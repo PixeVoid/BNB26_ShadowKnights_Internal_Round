@@ -47,26 +47,28 @@ You must use a tunnel to test on physical phones. Run one of the following in a 
 
 ## Project Structure
 
-* `app/page.tsx`: The main phone-view UI and testing harness, containing the live DB meter, Web Speech status, and WebSocket connection state.
-* `lib/audio/`: The core frontend audio engine.
-* `useRoundtableAudio.ts`: The primary React hook orchestrating the audio client, ASR, and WebSocket session.
+* `src/app/page.tsx`: The main phone-view UI and testing harness, containing the live DB meter, Web Speech status, and WebSocket connection state.
+* `src/lib/audio/`: The core frontend audio engine.
+* `src/lib/audio/useRoundtableAudio.ts`: The primary React hook orchestrating the audio client, ASR, and WebSocket session.
 
 
-* `audioClient.ts`: Manages the `AudioContext`, disables browser echo cancellation to get raw relative levels, and handles PCM fallback.
+* `src/lib/audio/audioClient.ts`: Manages the `AudioContext`, disables browser echo cancellation to get raw relative levels, and handles PCM fallback.
 
 
-* `asr.ts`: Wraps the Chrome Web Speech API, managing sequences and automatic restarts.
+* `src/lib/audio/asr.ts`: Wraps the Chrome Web Speech API, managing sequences and automatic restarts.
 
 
-* `session.ts`: Manages WebSocket connections, auto-reconnection, backfilling data, and NTP-style clock synchronization.
+* `src/lib/audio/session.ts`: Manages WebSocket connections, auto-reconnection, backfilling data, and NTP-style clock synchronization.
 
 
-* `calibration.ts` & `store.ts`: Handles the 30-second "say your name" calibration matrix and the 60-second ring buffer for retroactive corrections.
+* `src/lib/audio/calibration.ts` & `src/lib/audio/store.ts`: Handles the 30-second "say your name" calibration matrix and the 60-second ring buffer for retroactive corrections.
 
 
 
 
 * `public/worklet/level-processor.js`: Runs on a dedicated audio thread to compute RMS levels, noise floors, and Voice Activity Detection (VAD) every 20ms.
+
+* `speech_lineup.py`: The Python backend script that manages room sessions, performs hysteresis processing for accurate attribution, tracks real-time noise floors, and broadcasts dominant speaker events.
 
 
 * `public/coexist-test.html`: A standalone test page to verify if a specific phone can run Web Speech and `getUserMedia` mic metering simultaneously.
