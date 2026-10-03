@@ -17,7 +17,7 @@ export interface RoundtableAudioConfig {
   onCalibTurn?: (m: CalibTurnMsg, mine: boolean) => void;
 }
 
-type Parts = { audio?: AudioClient; asr?: AsrClient; link?: SessionLink; calib?: Calibrator; wake?: any };
+type Parts = { audio?: AudioClient; audioStarted?: boolean; asr?: AsrClient; link?: SessionLink; calib?: Calibrator; wake?: any; dev?: string };
 
 function explain(e: any): string {
   if (e?.name === 'NotAllowedError') return 'Microphone permission was denied.';
@@ -51,40 +51,7 @@ export function useRoundtableAudio(cfg: RoundtableAudioConfig) {
     setStatus('idle');
   }, []);
 
-  const start = useCallback(async () => {
-    if (parts.current.audio) {
-      parts.current.audio.setEnabled(true);
-      parts.current.asr?.start();
-      setStatus('live');
-      return;
-    }
-    setStatus('starting');
-    setError(null);
-
-    const dev = getDevId();
-    const store = new LevelStore();
-    let link!: SessionLink;
-
-    const calib = new Calibrator({
-      dev,
-      store,
-      now: () => link.now(),
-      send: (m) => link.send(m),
-      onTurn: (m, mine) => cfgRef.current.onCalibTurn?.(m, mine),
-    });
-
-    link = new SessionLink({
-      url: cfgRef.current.wsUrl,
-      dev,
-      name: cfgRef.current.name,
-      store,
-      onState: setConn,
-      onMessage: (m) => {
-        if (m.type === 'calib_turn') calib.handle(m);
-        cfgRef.current.onServerMessage?.(m);
-      },
-    });
-
+  const start = useCallback(async (captureMic = true) => {
     const toPcm = () => {
       if (modeRef.current === 'pcm') return;
       modeRef.current = 'pcm';
@@ -93,34 +60,85 @@ export function useRoundtableAudio(cfg: RoundtableAudioConfig) {
       parts.current.audio?.setPcm(true);
     };
 
-    const audio = new AudioClient({
-      serverOffset: () => link.offset,
-      onBatch: (b) => {
-        store.pushLevels(b);
-        link.sendLevels(b);
-        const l = b[b.length - 1];
-        meter.current = { db: l.db, floor: l.floor, vad: l.vad };
-      },
-      onPcm: (pcm, t) => link.sendPcm(pcm, t),
-      onHealth: (h) => {
-        // Web Speech grabbed the mic and our stream went silent -> stream PCM to the server instead.
-        if (h.kind === 'silent' && modeRef.current === 'webspeech') toPcm();
-        if (h.kind === 'ended') setError('The microphone was disconnected.');
-      },
-    });
+    if (!parts.current.audio) {
+      setError(null);
+      const dev = getDevId();
+      const store = new LevelStore();
+      let link!: SessionLink;
+      const calib = new Calibrator({
+        dev,
+        store,
+        now: () => link.now(),
+        send: (m) => link.send(m),
+        onTurn: (m, mine) => cfgRef.current.onCalibTurn?.(m, mine),
+      });
+      link = new SessionLink({
+        url: cfgRef.current.wsUrl,
+        dev,
+        name: cfgRef.current.name,
+        store,
+        onState: setConn,
+        onMessage: (m) => {
+          if (m.type === 'calib_turn') calib.handle(m);
+          cfgRef.current.onServerMessage?.(m);
+        },
+      });
+      const audio = new AudioClient({
+        serverOffset: () => link.offset,
+        onBatch: (b) => {
+          store.pushLevels(b);
+          link.sendLevels(b);
+          const l = b[b.length - 1];
+          meter.current = { db: l.db, floor: l.floor, vad: l.vad };
+        },
+        onPcm: (pcm, t) => link.sendPcm(pcm, t),
+        onHealth: (h) => {
+          if (h.kind === 'silent' && modeRef.current === 'webspeech') toPcm();
+          if (h.kind === 'ended') setError('The microphone was disconnected.');
+        },
+      });
+      parts.current = { audio, link, calib, dev };
+      link.connect();
+    }
 
-    parts.current = { audio, link, calib };
-    link.connect();
+    const p = parts.current;
+    const audio = p.audio;
+    const link = p.link;
+    const dev = p.dev;
+    if (!audio || !link || !dev) return;
 
+    if (!captureMic) {
+      if (p.audioStarted) {
+        audio.setEnabled(false);
+        p.asr?.stop();
+      }
+      setStatus('muted');
+      return;
+    }
+
+    if (p.audioStarted) {
+      audio.setEnabled(true);
+      p.asr?.start();
+      setStatus('live');
+      return;
+    }
+
+    setStatus('starting');
+    setError(null);
     try {
-      await audio.start(); // user gesture required
+      await audio.start(); // microphone permission is requested only after the user's mic action
     } catch (e) {
       setError(explain(e));
       setStatus('error');
+      p.asr?.stop();
+      p.calib?.cancel();
+      audio.stop(); // release a stream/context if startup failed partway through
       link.close();
+      try { p.wake?.release(); } catch { /* ignore */ }
       parts.current = {};
       throw e;
     }
+    p.audioStarted = true;
 
     const asr = new AsrClient({
       dev,
@@ -132,20 +150,36 @@ export function useRoundtableAudio(cfg: RoundtableAudioConfig) {
         if (s === 'unsupported' || s === 'failing') toPcm();
       },
     });
-    parts.current.asr = asr;
+    p.asr = asr;
     asr.start();
-
-    // keep the screen awake so the phone keeps streaming (best effort)
     try {
-      parts.current.wake = await (navigator as any).wakeLock?.request('screen');
+      p.wake = await (navigator as any).wakeLock?.request('screen');
     } catch { /* ignore */ }
-
     setStatus('live');
   }, []);
+
+  const connect = useCallback(() => start(false), [start]);
+
+  const send = useCallback((message: unknown) => parts.current.link?.send(message), []);
 
   const mute = useCallback(() => {
     parts.current.audio?.setEnabled(false);
     parts.current.asr?.stop();
+    setStatus('muted');
+  }, []);
+
+  // End local capture without closing the room socket; the server still needs
+  // that connection to deliver the finalized shared transcript.
+  const stopCapture = useCallback(() => {
+    const p = parts.current;
+    p.asr?.stop();
+    p.calib?.cancel();
+    p.audio?.stop();
+    p.audioStarted = false;
+    p.asr = undefined;
+    try { p.wake?.release(); } catch { /* ignore */ }
+    p.wake = undefined;
+    setAsrStatus('idle');
     setStatus('muted');
   }, []);
 
@@ -159,8 +193,10 @@ export function useRoundtableAudio(cfg: RoundtableAudioConfig) {
     error,
     meter,
     start,
+    connect,
     stop,
     mute,
-    send: (m: unknown) => parts.current.link?.send(m),
+    stopCapture,
+    send,
   };
 }

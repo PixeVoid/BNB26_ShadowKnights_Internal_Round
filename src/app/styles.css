@@ -2346,6 +2346,153 @@ main.phone-preview .mic-waveform i { width: 3px; max-height: 27px; }
   color: #85847b;
   font: 10px var(--mono);
 }
+.ai-room-card {
+  padding: 15px;
+  border: 1px solid #d5d3ca;
+  border-radius: var(--ui-radius-md);
+  background: linear-gradient(140deg, #fbfaf6, #f2f3ed);
+  box-shadow: var(--ui-shadow);
+}
+.ai-room-heading {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.ai-room-mark {
+  width: 30px;
+  height: 30px;
+  display: grid;
+  place-items: center;
+  border: 1px solid #cad8d4;
+  border-radius: 50%;
+  background: #eaf1ed;
+  color: #4f756b;
+  font: 14px var(--serif);
+}
+.ai-room-heading>div { display: grid; gap: 3px; min-width: 0; }
+.ai-room-heading>div b { font-size: 11px; font-weight: 600; }
+.ai-stage-label {
+  margin-left: auto;
+  color: #75837c;
+  font: 8px var(--mono);
+  letter-spacing: .07em;
+}
+.ai-room-card p {
+  margin: 11px 0 12px;
+  color: #686a63;
+  font-size: 10px;
+  line-height: 1.55;
+}
+.end-meeting-button {
+  min-height: 42px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  padding: 0 13px;
+  border: 1px solid #7eaaa8;
+  border-radius: 11px;
+  background: #d7e9e9;
+  color: #29464b;
+  font-size: 10px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background .18s ease, transform .18s ease;
+}
+.end-meeting-button:hover:not(:disabled) { background: #c8e0e1; transform: translateY(-1px); }
+.end-meeting-button:disabled { opacity: .56; cursor: not-allowed; }
+.end-meeting-button span { font-size: 15px; }
+.meeting-notice {
+  display: block;
+  margin-top: 9px;
+  color: #7a6850;
+  font: 8px/1.45 var(--mono);
+}
+.ai-progress {
+  height: 4px;
+  margin: 13px 0 2px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: #e3e5de;
+}
+.ai-progress i {
+  display: block;
+  width: 38%;
+  height: 100%;
+  border-radius: inherit;
+  background: #668b82;
+  animation: transcript-progress 1.8s ease-in-out infinite alternate;
+}
+@keyframes transcript-progress { to { width: 78%; } }
+.ai-stage-ready .ai-stage-label { color: #517b68; }
+.ai-stage-error .ai-stage-label { color: #9b5c51; }
+.roundtable-modal-backdrop {
+  position: absolute;
+  inset: 0;
+  z-index: 20;
+  display: grid;
+  place-items: center;
+  padding: 18px;
+  background: #2528207a;
+  backdrop-filter: blur(5px);
+}
+.roundtable-modal {
+  width: min(100%, 440px);
+  max-height: calc(100% - 20px);
+  overflow: auto;
+  padding: 23px;
+  border: 1px solid #d9d8ce;
+  border-radius: 22px;
+  background: #fbfaf6;
+  box-shadow: 0 20px 70px #15161040;
+}
+.roundtable-modal h2 {
+  margin: 8px 0 7px;
+  font-size: 23px;
+  font-weight: 500;
+  letter-spacing: -.045em;
+}
+.roundtable-modal>p {
+  margin: 0;
+  color: #686a63;
+  font-size: 11px;
+  line-height: 1.6;
+}
+.roundtable-modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+  gap: 9px;
+  margin-top: 19px;
+}
+.roundtable-modal-actions .quiet-button { min-height: 42px; padding-inline: 14px; }
+.modal-danger { background: #e8e5dc; border-color: #d2cfc5; color: #4d4b43; }
+.vote-list {
+  display: grid;
+  gap: 1px;
+  margin-top: 15px;
+  overflow: hidden;
+  border: 1px solid #e2e0d7;
+  border-radius: 12px;
+  background: #e2e0d7;
+}
+.vote-row {
+  min-height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 8px 11px;
+  background: #f7f6f0;
+  color: #4f5049;
+  font-size: 10px;
+}
+.vote-row small { color: #8a8980; font: 7px var(--mono); }
+.vote-state { font: 8px var(--mono); font-weight: 400; }
+.vote-pending { color: #888578; }
+.vote-end { color: #4d7767; }
+.vote-continue { color: #9c675a; }
+.vote-waiting-note { margin-top: 12px !important; font: 9px/1.5 var(--mono) !important; }
 @media (max-width: 680px) {
   .session-actions { gap: 5px; flex-wrap: wrap; justify-content: flex-end; }
   .connection-pill { font-size: 8px; margin-right: 2px; }
@@ -2354,6 +2501,10 @@ main.phone-preview .mic-waveform i { width: 3px; max-height: 27px; }
   .session-actions .leave-button { height: 29px; padding-inline: 8px; font-size: 8px; }
   .share-notice { top: 79px; right: 13px; }
   .transcript-tools { gap: 5px; }
+  .ai-room-card { padding: 12px; }
+  .roundtable-modal { padding: 19px; border-radius: 19px; }
+  .roundtable-modal-actions { display: grid; grid-template-columns: 1fr 1fr; }
+  .roundtable-modal-actions>* { justify-content: center; }
 }
 .diagnostics-page {
   min-height: 100vh;

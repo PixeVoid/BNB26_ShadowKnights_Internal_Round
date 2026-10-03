@@ -51,6 +51,83 @@ export interface CalibReportMsg {
   n: number;     // number of 20 ms frames (server should discard tiny n)
 }
 
+/** Sent after the participant explicitly turns their microphone on or off. */
+export interface MicStateMsg {
+  type: 'mic_state';
+  dev: string;
+  name: string;
+  enabled: boolean;
+}
+
+export type MeetingEndVote = 'end' | 'continue' | 'pending';
+
+/** Client -> server: proposer is implicitly counted as an approval. */
+export interface MeetingEndProposeMsg {
+  type: 'meeting_end_propose';
+  proposal_id: string;
+  dev: string;
+  name: string;
+}
+
+/** Client -> server: every other active participant votes on the same proposal. */
+export interface MeetingEndVoteMsg {
+  type: 'meeting_end_vote';
+  proposal_id: string;
+  dev: string;
+  vote: Exclude<MeetingEndVote, 'pending'>;
+}
+
+/** Server -> room: include all active devices, their display names, and current votes. */
+export interface MeetingEndProposedMsg {
+  type: 'meeting_end_proposed';
+  proposal_id: string;
+  proposer_dev: string;
+  proposer_name: string;
+  votes: Array<{ dev: string; name: string; vote: MeetingEndVote }>;
+}
+
+/** Server -> room: refresh the tally or clear the proposal when rejected/cancelled. */
+export interface MeetingEndVoteUpdateMsg {
+  type: 'meeting_end_vote_update';
+  proposal_id: string;
+  status: 'pending' | 'rejected' | 'cancelled';
+  message?: string;
+  votes?: Array<{ dev: string; name: string; vote: MeetingEndVote }>;
+}
+
+/** Server -> room: send only after unanimous approval and stop accepting live audio. */
+export interface MeetingEndedMsg {
+  type: 'meeting_ended';
+  proposal_id: string;
+}
+
+/** Server -> room: final fused captions shared with every room member. */
+export interface TranscriptReadyMsg {
+  type: 'transcript_ready';
+  segments: Array<{
+    id: string;
+    speaker: string;
+    t0: Ms;
+    t1: Ms;
+    text: string;
+    conf: number | null;
+    polished?: boolean;
+  }>;
+}
+
+/** Server -> room: progress while preparing the final shared transcript. */
+export interface TranscriptStatusMsg {
+  type: 'transcript_status';
+  status: 'processing' | 'error';
+  message?: string;
+}
+
+/** Server -> room: transcript generation failed after the live session ended. */
+export interface TranscriptErrorMsg {
+  type: 'transcript_error';
+  message?: string;
+}
+
 export type MicHealth =
   | { kind: 'ok' }
   | { kind: 'silent' }    // digital silence for > 3 s: mic probably stolen (e.g. by Web Speech)

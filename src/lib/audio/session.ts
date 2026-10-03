@@ -50,9 +50,11 @@ export interface SessionLinkOptions {
 /**
  * Protocol (agree with backend in hour 1):
  *  phone -> {type:'hello', dev, name}            server -> {type:'welcome', lastT, lastSeq}
+ *  phone -> {type:'mic_state', enabled}          server tracks active audio contributors
  *  phone -> {type:'ping', id, t0}                server -> {type:'pong', id, t0, ts}   (ts = server epoch ms)
  *  phone -> {type:'level', dev, batch}           (only after welcome; backfill batches carry backfill:true)
  *  phone -> {type:'asr', ...}                    (server dedups by dev+seq, latest wins, final is sticky)
+ *  phone -> meeting_end_propose / meeting_end_vote; server broadcasts votes and finalized transcript status
  *  phone -> binary frame: float64 LE t (server ms of chunk end) + int16 LE mono 16 kHz samples (PCM fallback)
  */
 export class SessionLink {

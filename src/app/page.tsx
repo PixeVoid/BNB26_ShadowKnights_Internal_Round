@@ -3,11 +3,15 @@
 import { FormEvent, useCallback, useEffect, useRef, useState } from "react";
 import { flushSync } from "react-dom";
 import { useRoundtableAudio } from "../lib/audio/useRoundtableAudio";
+import { getDevId } from "../lib/audio/session";
 import { captionsToSrt, captionsToVtt, makeRoomCode } from "../lib/roomTools.mjs";
 
 type Phase = "join" | "connecting" | "live";
 type Caption = { speaker: string; text: string; time: string; draft?: boolean; final?: boolean; confidence?: "low"; id?: string; seq?: number; t0?: number; t1?: number };
 type Person = { name: string; color: string; state: string; level: number };
+type EndVote = { dev: string; name: string; vote: "pending" | "end" | "continue" };
+type MeetingEndProposal = { id: string; proposerDev: string; proposerName: string; votes: EndVote[] };
+type AiStage = "live" | "processing" | "ready" | "error";
 
 const palette = ["#bb83ff", "#77d6bd", "#ffc86b", "#ff806c", "#7da8ff", "#f28bd3"];
 const starter: Caption[] = [
@@ -210,6 +214,16 @@ export default function Home() {
   const [shareNotice, setShareNotice] = useState("");
   const [calibration, setCalibration] = useState<{ mine: boolean; speaker: string } | null>(null);
   const calibrationTimer = useRef<number | null>(null);
+  const [exitConfirm, setExitConfirm] = useState(false);
+  const [exitOrigin, setExitOrigin] = useState<"button" | "back">("button");
+  const [endProposal, setEndProposal] = useState<MeetingEndProposal | null>(null);
+  const [aiStage, setAiStage] = useState<AiStage>("live");
+  const [meetingNotice, setMeetingNotice] = useState("");
+  const endRequestTimer = useRef<number | null>(null);
+  const endProposalRef = useRef<MeetingEndProposal | null>(null);
+  const allowBackRef = useRef(false);
+  const devIdRef = useRef("");
+  const lastMicStateRef = useRef<boolean | null>(null);
   const [previewMicOn, setPreviewMicOn] = useState(false);
   const [micLevel, setMicLevel] = useState(0);
   const [micDb, setMicDb] = useState(-100);
@@ -218,8 +232,15 @@ export default function Home() {
   const rafRef = useRef<number>(0);
   const previewMicRef = useRef<{ stream: MediaStream; context: AudioContext; analyser: AnalyserNode; samples: Uint8Array } | null>(null);
 
+  const updateEndProposal = useCallback((next: MeetingEndProposal | null | ((current: MeetingEndProposal | null) => MeetingEndProposal | null)) => {
+    const resolved = typeof next === "function" ? next(endProposalRef.current) : next;
+    endProposalRef.current = resolved;
+    setEndProposal(resolved);
+  }, []);
+
   useEffect(() => {
     setBackend(apiOrigin());
+    devIdRef.current = getDevId();
     const params = new URLSearchParams(window.location.search);
     const sharedRoom = params.get("room");
     if (sharedRoom) setRoom(sharedRoom.toUpperCase().slice(0, 8));
@@ -236,6 +257,32 @@ export default function Home() {
   useEffect(() => {
     window.localStorage.setItem("roundtable-view", phoneView ? "phone" : "full");
   }, [phoneView]);
+
+  const roomActive = phase === "live";
+  useEffect(() => {
+    if (!roomActive) return;
+    allowBackRef.current = false;
+    window.history.pushState({ roundtableRoomGuard: true }, "", window.location.href);
+    const onPopState = () => {
+      if (allowBackRef.current) {
+        allowBackRef.current = false;
+        return;
+      }
+      window.history.pushState({ roundtableRoomGuard: true }, "", window.location.href);
+      setExitOrigin("back");
+      setExitConfirm(true);
+    };
+    const onBeforeUnload = (event: BeforeUnloadEvent) => {
+      event.preventDefault();
+      event.returnValue = "";
+    };
+    window.addEventListener("popstate", onPopState);
+    window.addEventListener("beforeunload", onBeforeUnload);
+    return () => {
+      window.removeEventListener("popstate", onPopState);
+      window.removeEventListener("beforeunload", onBeforeUnload);
+    };
+  }, [roomActive]);
 
   const self = name || "You";
 
@@ -298,11 +345,80 @@ export default function Home() {
         return [...prev, stamped].slice(-30);
       });
     }
+    if (data.type === "meeting_end_proposed") {
+      if (endRequestTimer.current !== null) window.clearTimeout(endRequestTimer.current);
+      endRequestTimer.current = null;
+      const votes: EndVote[] = Array.isArray(data.votes) ? data.votes.map((vote: any) => ({
+        dev: String(vote.dev || ""),
+        name: String(vote.name || vote.dev || "Participant"),
+        vote: vote.vote === "end" || vote.vote === "continue" ? vote.vote : "pending",
+      })) : [];
+      updateEndProposal({
+        id: String(data.proposal_id || ""),
+        proposerDev: String(data.proposer_dev || ""),
+        proposerName: String(data.proposer_name || "A participant"),
+        votes,
+      });
+      setMeetingNotice("");
+    }
+    if (data.type === "meeting_end_vote_update") {
+      const activeProposal = endProposalRef.current;
+      if (!activeProposal || data.proposal_id !== activeProposal.id) return;
+      if (data.status === "rejected" || data.status === "cancelled") {
+        updateEndProposal(null);
+        setMeetingNotice(data.message || (data.status === "rejected"
+          ? "The room voted to keep the meeting going."
+          : "The end-meeting vote was cancelled. The live session continues."));
+      } else if (Array.isArray(data.votes)) {
+        updateEndProposal(current => current ? {
+          ...current,
+          votes: data.votes.map((vote: any) => ({
+            dev: String(vote.dev || ""),
+            name: String(vote.name || vote.dev || "Participant"),
+            vote: vote.vote === "end" || vote.vote === "continue" ? vote.vote : "pending",
+          })),
+        } : current);
+      }
+    }
+    if (data.type === "meeting_ended") {
+      if (endRequestTimer.current !== null) window.clearTimeout(endRequestTimer.current);
+      endRequestTimer.current = null;
+      updateEndProposal(null);
+      setAiStage("processing");
+      setStatus("Meeting ended · preparing the shared transcript");
+      setMeetingNotice("");
+    }
+    if (data.type === "meeting_started") {
+      setStatus("Meeting in progress · room audio is active");
+    }
+    if (data.type === "transcript_status") {
+      if (data.status === "error") setAiStage(current => current === "live" ? "live" : "error");
+    }
+    if (data.type === "transcript_ready") {
+      const segments = Array.isArray(data.segments) ? data.segments : [];
+      setCaptions(segments.map((segment: any, index: number): Caption => ({
+        id: String(segment.id || `${segment.speaker || "Room"}-${segment.seq ?? index}`),
+        seq: Number.isFinite(segment.seq) ? segment.seq : undefined,
+        speaker: String(segment.speaker || "Room"),
+        text: String(segment.text || ""),
+        time: Number.isFinite(segment.t0) ? new Date(segment.t0).toLocaleTimeString([], { minute: "2-digit", second: "2-digit" }) : "",
+        t0: Number.isFinite(segment.t0) ? segment.t0 : undefined,
+        t1: Number.isFinite(segment.t1) ? segment.t1 : undefined,
+        final: true,
+        confidence: typeof segment.conf === "number" && segment.conf < 0.55 ? "low" : undefined,
+      })).filter((caption: Caption) => caption.text.trim()));
+      setAiStage("ready");
+      setStatus("Shared transcript ready");
+    }
+    if (data.type === "transcript_error") {
+      setAiStage(current => current === "live" ? "live" : "error");
+      setMeetingNotice(data.message || "The transcript could not be finalized. Your live captions are still available.");
+    }
     if (data.type === "welcome") {
       setPhase("live");
       setStatus("Your room is ready");
     }
-  }, []);
+  }, [updateEndProposal]);
 
   // ── Audio hook ────────────────────────────────────────────────────────────
   const audio = useRoundtableAudio({
@@ -315,6 +431,29 @@ export default function Home() {
       calibrationTimer.current = window.setTimeout(() => setCalibration(null), 12_000);
     },
   });
+
+  useEffect(() => {
+    if (!wsUrl || isPreviewRef.current || audio.conn !== "open") {
+      if (audio.conn !== "open") lastMicStateRef.current = null;
+      return;
+    }
+    if (audio.status === "starting" || audio.status === "idle" || audio.status === "error") return;
+    const enabled = audio.status === "live";
+    if (lastMicStateRef.current === enabled) return;
+    audio.send({ type: "mic_state", dev: devIdRef.current || getDevId(), name: self, enabled });
+    lastMicStateRef.current = enabled;
+  }, [audio.conn, audio.send, audio.status, self, wsUrl]);
+
+  useEffect(() => {
+    if (aiStage === "live") return;
+    audio.stopCapture();
+    if (previewMicRef.current) {
+      previewMicRef.current.stream.getTracks().forEach(track => track.stop());
+      previewMicRef.current.context.close().catch(() => {});
+      previewMicRef.current = null;
+      setPreviewMicOn(false);
+    }
+  }, [aiStage, audio.stopCapture]);
 
   // Map hook conn state → our UI connection state (skip in preview mode)
   useEffect(() => {
@@ -397,6 +536,9 @@ export default function Home() {
 
     const code = room.trim().toUpperCase() || makeRoomCode();
     setRoomCode(code);
+    setAiStage("live");
+    updateEndProposal(null);
+    setMeetingNotice("");
     setPhase("connecting");
     setConnection("waking");
     setStatus("Waking the room server…");
@@ -435,7 +577,7 @@ export default function Home() {
       isPreviewRef.current = false;
       flushSync(() => setWsUrl(`${wsOrigin(origin)}/ws/${encodeURIComponent(code)}`));
       addSelf();
-      await audio.start();
+      await audio.connect();
     } catch (error) {
       setConnection("idle");
       setPhase("join");
@@ -459,16 +601,68 @@ export default function Home() {
     isPreviewRef.current = false;
     cancelAnimationFrame(rafRef.current);
     setPhase("join");
+    setExitConfirm(false);
     setConnection("idle");
     setUiError("");
     setStatus("Ready when you are");
     setPeople([]);
     setCaptions([]);
     setCalibration(null);
+    updateEndProposal(null);
+    setAiStage("live");
+    setMeetingNotice("");
+    if (endRequestTimer.current !== null) window.clearTimeout(endRequestTimer.current);
+    endRequestTimer.current = null;
     if (calibrationTimer.current !== null) window.clearTimeout(calibrationTimer.current);
     calibrationTimer.current = null;
     setWsUrl("");
     setRoomCode("");
+  }
+
+  function confirmLeaveRoom() {
+    const cameFromBack = exitOrigin === "back";
+    setExitConfirm(false);
+    if (cameFromBack) allowBackRef.current = true;
+    leaveRoom();
+    if (cameFromBack) window.history.back();
+  }
+
+  function requestMeetingEnd() {
+    if (connection === "preview") {
+      setMeetingNotice("Shared end-of-meeting votes are available after connecting to the room server.");
+      return;
+    }
+    if (audio.conn !== "open") {
+      setMeetingNotice("Reconnect to the room before proposing to end the meeting.");
+      return;
+    }
+    const proposalId = globalThis.crypto?.randomUUID?.() || `${Date.now()}-${Math.random().toString(36).slice(2)}`;
+    const sent = audio.send({ type: "meeting_end_propose", proposal_id: proposalId, dev: devIdRef.current || getDevId(), name: self });
+    if (!sent) {
+      setMeetingNotice("Your proposal could not reach the room. Check the connection and try again.");
+      return;
+    }
+    setMeetingNotice("End proposal sent · waiting for the room server…");
+    if (endRequestTimer.current !== null) window.clearTimeout(endRequestTimer.current);
+    endRequestTimer.current = window.setTimeout(() => {
+      endRequestTimer.current = null;
+      setMeetingNotice("The room server hasn’t acknowledged end-meeting votes yet.");
+    }, 8000);
+  }
+
+  function voteOnMeetingEnd(vote: "end" | "continue") {
+    if (!endProposal) return;
+    const dev = devIdRef.current || getDevId();
+    const sent = audio.send({ type: "meeting_end_vote", proposal_id: endProposal.id, dev, vote });
+    if (!sent) {
+      setMeetingNotice("Your vote could not reach the room. Reconnect and try again.");
+      return;
+    }
+    updateEndProposal(current => current ? {
+      ...current,
+      votes: current.votes.map(item => item.dev === dev ? { ...item, vote } : item),
+    } : current);
+    setMeetingNotice(vote === "end" ? "Your vote is in. The room will stop only if everyone agrees." : "Your vote is in. Waiting for the room’s response.");
   }
 
   async function toggleMic() {
@@ -481,10 +675,15 @@ export default function Home() {
     }
     if (audio.status === "live") {
       audio.mute();
+      if (connection === "connected") setStatus("Your mic is off · you’re still in the room");
       setPeople(prev => prev.map(person => person.name === self ? { ...person, level: 0, state: "connected" } : person));
-    } else if ((audio.status === "idle" || audio.status === "muted") && wsUrl) {
+    } else if ((audio.status === "idle" || audio.status === "muted" || audio.status === "error") && wsUrl) {
       // Re-enable mic in an active real session
-      try { await audio.start(); }
+      try {
+        await audio.start();
+        setStatus("Meeting in progress · room audio is active");
+        setUiError("");
+      }
       catch { setUiError("Microphone access is blocked. Allow it in your browser settings and try again."); }
     } else {
       // Preview mode — just request mic permission for UI feedback
@@ -622,7 +821,7 @@ export default function Home() {
                 {roomCode}<span aria-hidden="true">⧉</span>
               </button>
               <button className="quiet-button share-button" type="button" onClick={shareRoom} disabled={connection === "preview"}>Share room</button>
-              <button className="quiet-button leave-button" onClick={leaveRoom}>Leave room <span>×</span></button>
+              <button className="quiet-button leave-button" onClick={() => { setExitOrigin("button"); setExitConfirm(true); }}>Leave room <span>×</span></button>
             </div>
           </div>
 
@@ -652,8 +851,8 @@ export default function Home() {
                     return <i key={index} style={{ height: `${height}px` }} />;
                   })}
                 </div>
-                <button type="button" aria-pressed={micOn} className={`mic-button ${micOn ? "on" : ""}`} onClick={toggleMic}>
-                  {micOn ? "Turn mic off" : "Turn mic on"}<span>{micOn ? "■" : "●"}</span>
+                <button type="button" aria-pressed={micOn} className={`mic-button ${micOn ? "on" : ""}`} onClick={toggleMic} disabled={aiStage !== "live"}>
+                  {aiStage !== "live" ? "Mic paused" : micOn ? "Turn mic off" : "Turn mic on"}<span>{micOn ? "■" : "●"}</span>
                 </button>
                 {error && <p className="mic-error" role="alert">{error}</p>}
               </section>
@@ -661,6 +860,31 @@ export default function Home() {
                 <b>{calibration.mine ? "Say your name clearly" : "Room calibration"}</b>
                 <span>{calibration.mine ? "Your room is measuring how your voice sounds across the devices." : "A participant is speaking briefly so the room can compare microphone levels."}</span>
               </div>}
+              <section className={`ai-room-card ai-stage-${aiStage}`} aria-live="polite">
+                <div className="ai-room-heading">
+                  <span className="ai-room-mark" aria-hidden="true">R</span>
+                  <div><span className="micro-label">ROUND TABLE AI</span><b>{aiStage === "live" ? "Shared transcript" : aiStage === "processing" ? "Preparing your captions" : aiStage === "ready" ? "Transcript ready" : "Transcript needs attention"}</b></div>
+                  <span className="ai-stage-label">{aiStage === "live" ? "LIVE" : aiStage === "processing" ? "WORKING" : aiStage === "ready" ? "READY" : "RETRY"}</span>
+                </div>
+                <p>
+                  {connection === "preview"
+                    ? "Preview captions are examples. Connect the room service to use shared meeting votes and transcript generation."
+                    : aiStage === "live"
+                      ? "When everyone approves ending, the room can reconcile captions using timing, confidence, and mic levels, then prepare one transcript for everyone."
+                      : aiStage === "processing"
+                        ? "Everyone approved. Microphones are being muted while the room reconciles its captions. Keep this room open; the transcript will appear here."
+                        : aiStage === "ready"
+                          ? `${captions.length} caption${captions.length === 1 ? "" : "s"} finalized for this room. Download the transcript from the caption panel.`
+                          : "The final transcript could not be prepared. Live captions remain available in the transcript panel."}
+                </p>
+                {aiStage === "processing" && <div className="ai-progress" role="progressbar" aria-label="Preparing shared transcript"><i /></div>}
+                {aiStage === "live" && (micOn
+                  ? <button className="end-meeting-button" type="button" onClick={requestMeetingEnd} disabled={Boolean(endProposal)}>
+                    {endProposal ? "End proposal in progress" : "Propose to end meeting"}<span aria-hidden="true">↗</span>
+                  </button>
+                  : <span className="meeting-notice">Turn your mic on to propose ending the meeting.</span>)}
+                {meetingNotice && <span className="meeting-notice" role="status">{meetingNotice}</span>}
+              </section>
               <div className="participant-panel">
                 <div className="panel-heading">
                   <span className="micro-label">AT THE TABLE</span>
@@ -714,6 +938,38 @@ export default function Home() {
           </div>
         </section>
       )}
+
+      {exitConfirm && <div className="roundtable-modal-backdrop" role="presentation">
+        <section className="roundtable-modal" role="dialog" aria-modal="true" aria-labelledby="leave-dialog-title">
+          <span className="micro-label">ROOM {roomCode} / STILL LIVE</span>
+          <h2 id="leave-dialog-title">Leave this meeting?</h2>
+          <p>Your microphone and live captions will disconnect from this device. This will not end the meeting for everyone else.</p>
+          <div className="roundtable-modal-actions">
+            <button className="quiet-button" type="button" onClick={() => setExitConfirm(false)}>Stay in room</button>
+            <button className="end-meeting-button modal-danger" type="button" onClick={confirmLeaveRoom}>Leave room</button>
+          </div>
+        </section>
+      </div>}
+
+      {endProposal && <div className="roundtable-modal-backdrop" role="presentation">
+        <section className="roundtable-modal end-vote-modal" role="dialog" aria-modal="true" aria-labelledby="end-dialog-title">
+          <span className="micro-label">ROOM {roomCode} / END MEETING VOTE</span>
+          <h2 id="end-dialog-title">{endProposal.proposerDev === devIdRef.current ? "You proposed ending" : `${endProposal.proposerName} proposes ending`}</h2>
+          <p>The meeting ends only when every connected participant agrees. If anyone chooses to continue, the live session stays open.</p>
+          <div className="vote-list">
+            {endProposal.votes.map(vote => <div className="vote-row" key={vote.dev || vote.name}>
+              <span>{vote.name}{vote.dev === endProposal.proposerDev ? <small> · PROPOSED</small> : ""}</span>
+              <b className={`vote-state vote-${vote.vote}`}>{vote.vote === "end" ? "Agreed" : vote.vote === "continue" ? "Keep meeting" : "Waiting"}</b>
+            </div>)}
+            {endProposal.votes.length === 0 && <span className="meeting-notice">Waiting for the room’s vote list…</span>}
+          </div>
+          {endProposal.proposerDev !== devIdRef.current && !endProposal.votes.some(vote => vote.dev === devIdRef.current && vote.vote !== "pending") && <div className="roundtable-modal-actions vote-actions">
+            <button className="quiet-button" type="button" onClick={() => voteOnMeetingEnd("continue")}>Continue meeting</button>
+            <button className="end-meeting-button" type="button" onClick={() => voteOnMeetingEnd("end")}>End meeting</button>
+          </div>}
+          {endProposal.proposerDev === devIdRef.current && <p className="vote-waiting-note">Your proposal is shared. Waiting for every other participant to vote.</p>}
+        </section>
+      </div>}
 
       <div className="grain" aria-hidden="true" />
     </main>
