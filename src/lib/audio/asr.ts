@@ -91,7 +91,11 @@ export class AsrClient {
         this.o.onStatus?.('blocked');
         return;
       }
-      if (++this.failures >= 3) this.o.onStatus?.('failing'); // network / audio-capture errors
+      if (++this.failures >= 3) {
+        this.running = false;
+        this.o.onStatus?.('failing');
+        return;
+      }
     };
 
     rec.onend = () => {

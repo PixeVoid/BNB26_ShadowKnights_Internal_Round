@@ -93,7 +93,6 @@ export function useRoundtableAudio(cfg: RoundtableAudioConfig) {
         },
         onPcm: (pcm, t) => link.sendPcm(pcm, t),
         onHealth: (h) => {
-          if (h.kind === 'silent' && modeRef.current === 'webspeech') toPcm();
           if (h.kind === 'ended') setError('The microphone was disconnected.');
         },
       });
@@ -147,7 +146,6 @@ export function useRoundtableAudio(cfg: RoundtableAudioConfig) {
       onAsr: (m) => link.sendAsr(m),
       onStatus: (s) => {
         setAsrStatus(s);
-        if (s === 'unsupported' || s === 'failing') toPcm();
       },
     });
     p.asr = asr;

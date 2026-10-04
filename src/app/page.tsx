@@ -913,7 +913,7 @@ export default function Home() {
                   <span className="ai-room-mark" aria-hidden="true">R</span>
                   <div><span className="micro-label">ROUND TABLE AI</span><b>{aiStage === "live" ? "Shared transcript" : aiStage === "processing" ? "Preparing your captions" : aiStage === "ready" ? "Transcript ready" : "Transcript needs attention"}</b></div>
                   {aiStage === "error" 
-                    ? <button type="button" className="ai-stage-label retry-button" onClick={() => sendData({ type: "retry_summary" })}>RETRY</button>
+                    ? <button type="button" className="ai-stage-label retry-button" onClick={() => audio.send({ type: "retry_summary" })}>RETRY</button>
                     : <span className="ai-stage-label">{aiStage === "live" ? "LIVE" : aiStage === "processing" ? "WORKING" : "READY"}</span>
                   }
                 </div>
@@ -1019,7 +1019,7 @@ export default function Home() {
           </div>}
           {endProposal.proposerDev === devIdRef.current && <div className="roundtable-modal-actions vote-actions" style={{justifyContent: "space-between"}}>
             <p className="vote-waiting-note" style={{margin: 0}}>Waiting for everyone to vote.</p>
-            <button className="quiet-button" type="button" onClick={() => sendData({ type: "cancel_meeting_end_proposal", proposal_id: endProposal.proposalId })}>Cancel proposal</button>
+            <button className="quiet-button" type="button" onClick={() => audio.send({ type: "cancel_meeting_end_proposal", proposal_id: endProposal.id })}>Cancel proposal</button>
           </div>}
         </section>
       </div>}
