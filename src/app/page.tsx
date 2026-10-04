@@ -428,6 +428,10 @@ export default function Home() {
     if (data.type === "welcome") {
       setPhase("live");
       setStatus("Your room is ready");
+      if (data.meetingEnded) {
+        setMeetingEnded(true);
+        setAiStage("processing");
+      }
     }
     if (data.type === "ai_summary_status") {
       setAiStage("processing");

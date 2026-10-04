@@ -286,7 +286,7 @@ class RoomState:
         def _generate_summary():
             client = genai.Client(api_key=api_key)
             response = client.models.generate_content(
-                model='gemini-1.5-flash',
+                model='gemini-2.5-flash',
                 contents=prompt,
             )
             return response.text
@@ -375,6 +375,7 @@ async def websocket_session(websocket: WebSocket, room_id: str):
             "type": "welcome",
             "lastT": int(room.latest_level_t),
             "lastSeq": int(last_seq),
+            "meetingEnded": room.meeting_ended,
         })
         for p_dev, p_data in room.participants.items():
             if p_dev != dev:
