@@ -13,6 +13,11 @@ import threading
 import time
 from typing import Dict, List, Optional
 
+try:
+    from google import genai
+except ImportError:
+    genai = None
+
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
 
@@ -258,6 +263,46 @@ class RoomState:
             "proposal_id": proposal_id,
             "segments": segments,
         })
+        
+        # ── AI Summarization ──
+        if not segments:
+            return
+
+        api_key = os.environ.get("GEMINI_API_KEY")
+        if not api_key or genai is None:
+            logger.info("Skipping AI summarization: GEMINI_API_KEY not set or google-genai not installed.")
+            return
+
+        await self.broadcast({"type": "ai_summary_status", "status": "generating"})
+        
+        # Build prompt
+        transcript_text = "\n".join(f"{s['speaker']}: {s['text']}" for s in segments)
+        prompt = (
+            "Here is a transcript of a meeting. Please generate a concise summary and a bulleted list of action items, "
+            "attributing them to the correct speakers if applicable. Format your response in Markdown.\n\n"
+            f"Transcript:\n{transcript_text}"
+        )
+
+        def _generate_summary():
+            client = genai.Client(api_key=api_key)
+            response = client.models.generate_content(
+                model='gemini-1.5-flash',
+                contents=prompt,
+            )
+            return response.text
+
+        try:
+            summary = await asyncio.to_thread(_generate_summary)
+            await self.broadcast({
+                "type": "ai_summary",
+                "markdown": summary,
+            })
+        except Exception as exc:
+            logger.exception("AI Summarization failed")
+            await self.broadcast({
+                "type": "ai_summary_error",
+                "message": str(exc),
+            })
 
 
 ROOMS: Dict[str, RoomState] = {}

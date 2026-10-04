@@ -5,6 +5,7 @@ import { flushSync } from "react-dom";
 import { useRoundtableAudio } from "../lib/audio/useRoundtableAudio";
 import { getDevId } from "../lib/audio/session";
 import { captionsToSrt, captionsToVtt, makeRoomCode } from "../lib/roomTools.mjs";
+import ReactMarkdown from "react-markdown";
 
 type Phase = "join" | "connecting" | "live";
 type Caption = { speaker: string; text: string; time: string; draft?: boolean; final?: boolean; confidence?: "low"; id?: string; seq?: number; t0?: number; t1?: number };
@@ -227,6 +228,7 @@ export default function Home() {
   const [exitOrigin, setExitOrigin] = useState<"button" | "back">("button");
   const [endProposal, setEndProposal] = useState<MeetingEndProposal | null>(null);
   const [aiStage, setAiStage] = useState<AiStage>("live");
+  const [aiSummary, setAiSummary] = useState<string | null>(null);
   const [meetingNotice, setMeetingNotice] = useState("");
   const endRequestTimer = useRef<number | null>(null);
   const endProposalRef = useRef<MeetingEndProposal | null>(null);
@@ -427,7 +429,29 @@ export default function Home() {
       setPhase("live");
       setStatus("Your room is ready");
     }
+    if (data.type === "ai_summary_status") {
+      setAiStage("processing");
+      setStatus("AI is generating the meeting summary");
+    }
+    if (data.type === "ai_summary") {
+      setAiSummary(data.markdown);
+      setAiStage("ready");
+      setStatus("Meeting summary ready");
+    }
+    if (data.type === "ai_summary_error") {
+      setAiStage(current => current === "live" ? "live" : "error");
+      setMeetingNotice(data.message || "Failed to generate AI summary.");
+    }
   }, [updateEndProposal]);
+
+  // ── Render Keepalive ───────────────────────────────────────────────────────
+  useEffect(() => {
+    if (connection === "idle" || connection === "preview" || !backend) return;
+    const interval = window.setInterval(() => {
+      fetch(`${backend}/health`).catch(() => {});
+    }, 10 * 60 * 1000); // 10 minutes
+    return () => window.clearInterval(interval);
+  }, [connection, backend]);
 
   // ── Audio hook ────────────────────────────────────────────────────────────
   const audio = useRoundtableAudio({
@@ -857,7 +881,9 @@ export default function Home() {
                   {Array.from({ length: 25 }, (_, index) => {
                     const shape = .2 + .8 * Math.abs(Math.sin((index + 2) * 1.17));
                     const height = micOn ? Math.max(4, 4 + micLevel * (.12 + shape * .3)) : 4;
-                    return <i key={index} style={{ height: `${height}px` }} />;
+                    const ratio = Math.min(1, Math.max(0, (height - 4) / 28));
+                    const background = micOn && height > 4.5 ? `hsl(${150 - ratio * 140}, ${35 + ratio * 45}%, ${55 - ratio * 10}%)` : undefined;
+                    return <i key={index} style={{ height: `${height}px`, background }} />;
                   })}
                 </div>
                 <button type="button" aria-pressed={micOn} className={`mic-button ${micOn ? "on" : ""}`} onClick={toggleMic} disabled={aiStage !== "live"}>
@@ -875,17 +901,17 @@ export default function Home() {
                   <div><span className="micro-label">ROUND TABLE AI</span><b>{aiStage === "live" ? "Shared transcript" : aiStage === "processing" ? "Preparing your captions" : aiStage === "ready" ? "Transcript ready" : "Transcript needs attention"}</b></div>
                   <span className="ai-stage-label">{aiStage === "live" ? "LIVE" : aiStage === "processing" ? "WORKING" : aiStage === "ready" ? "READY" : "RETRY"}</span>
                 </div>
-                <p>
+                <div className="ai-summary-content">
                   {connection === "preview"
-                    ? "Preview captions are examples. Connect the room service to use shared meeting votes and transcript generation."
+                    ? <p>Preview captions are examples. Connect the room service to use shared meeting votes and transcript generation.</p>
                     : aiStage === "live"
-                      ? "When everyone approves ending, the room can reconcile captions using timing, confidence, and mic levels, then prepare one transcript for everyone."
+                      ? <p>When everyone approves ending, the room can reconcile captions using timing, confidence, and mic levels, then prepare one transcript for everyone.</p>
                       : aiStage === "processing"
-                        ? "Everyone approved. Microphones are being muted while the room reconciles its captions. Keep this room open; the transcript will appear here."
+                        ? <p>Everyone approved. Microphones are being muted while the room reconciles its captions. Keep this room open; the transcript will appear here.</p>
                         : aiStage === "ready"
-                          ? `${captions.length} caption${captions.length === 1 ? "" : "s"} finalized for this room. Download the transcript from the caption panel.`
-                          : "The final transcript could not be prepared. Live captions remain available in the transcript panel."}
-                </p>
+                          ? (aiSummary ? <div className="markdown-body"><ReactMarkdown>{aiSummary}</ReactMarkdown></div> : <p>{captions.length} caption{captions.length === 1 ? "" : "s"} finalized for this room. Download the transcript from the caption panel.</p>)
+                          : <p>The final transcript could not be prepared. Live captions remain available in the transcript panel.</p>}
+                </div>
                 {aiStage === "processing" && <div className="ai-progress" role="progressbar" aria-label="Preparing shared transcript"><i /></div>}
                 {aiStage === "live" && (micOn
                   ? <button className="end-meeting-button" type="button" onClick={requestMeetingEnd} disabled={Boolean(endProposal)}>
@@ -919,7 +945,6 @@ export default function Home() {
                   <h2>Live transcript</h2>
                 </div>
                 <div className="transcript-tools">
-                  <label className="text-size-control">Aa <input aria-label="Caption text size" type="range" min=".9" max="1.4" step=".1" value={fontScale} onChange={e => setFontScale(Number(e.target.value))} /></label>
                   <button className="export-button" type="button" onClick={() => downloadCaptions("vtt")} disabled={!captions.some(c => c.final !== false && !c.draft)}>VTT</button>
                   <button className="export-button" type="button" onClick={() => downloadCaptions("srt")} disabled={!captions.some(c => c.final !== false && !c.draft)}>SRT</button>
                 </div>

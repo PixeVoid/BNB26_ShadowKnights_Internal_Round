@@ -1,0 +1,13 @@
+services:
+  - type: web
+    name: roundtable-backend
+    env: python
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn speech_lineup:app --host 0.0.0.0 --port $PORT
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.12.0
+      - key: WHISPER_MODEL
+        value: tiny
+      - key: GEMINI_API_KEY
+        sync: false

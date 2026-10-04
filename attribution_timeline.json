@@ -1,0 +1,1527 @@
+{
+  "room_id": "YYK93M",
+  "speaker_intervals": [
+    {
+      "speaker": "d_kncw84ed",
+      "speaker_name": "Ankit Anand",
+      "start_t": 1791061858.022,
+      "end_t": 1791061859.519
+    },
+    {
+      "speaker": "d_kncw84ed",
+      "speaker_name": "Ankit Anand",
+      "start_t": 1791061859.669,
+      "end_t": 1791061859.669
+    }
+  ],
+  "timeline_events": [
+    {
+      "type": "attribution",
+      "timestamp": 1791061857817,
+      "dominant_speaker": null,
+      "speaker_name": null,
+      "speaker_switched": false,
+      "overlap": false,
+      "active_speakers": [],
+      "levels_db": {
+        "Ankit Anand": -100.0
+      }
+    },
+    {
+      "type": "attribution",
+      "timestamp": 1791061857817,
+      "dominant_speaker": null,
+      "speaker_name": null,
+      "speaker_switched": false,
+      "overlap": false,
+      "active_speakers": [
+        "d_kncw84ed"
+      ],
+      "levels_db": {
+        "Ankit Anand": -9.9
+      }
+    },
+    {
+      "type": "attribution",
+      "timestamp": 1791061857869,
+      "dominant_speaker": null,
+      "speaker_name": null,
+      "speaker_switched": false,
+      "overlap": false,
+      "active_speakers": [
+        "d_kncw84ed"
+      ],
+      "levels_db": {
+        "Ankit Anand": -7.1
+      }
+    },
+    {
+      "type": "attribution",
+      "timestamp": 1791061857869,
+      "dominant_speaker": null,
+      "speaker_name": null,
+      "speaker_switched": false,
+      "overlap": false,
+      "active_speakers": [
+        "d_kncw84ed"
+      ],
+      "levels_db": {
+        "Ankit Anand": -8.9
+      }
+    },
+    {
+      "type": "attribution",
+      "timestamp": 1791061857917,
+      "dominant_speaker": null,
+      "speaker_name": null,
+      "speaker_switched": false,
+      "overlap": false,
+      "active_speakers": [
+        "d_kncw84ed"
+      ],
+      "levels_db": {
+        "Ankit Anand": -10.6
+      }
+    },
+    {
+      "type": "attribution",
+      "timestamp": 1791061857917,
+      "dominant_speaker": null,
+      "speaker_name": null,
+      "speaker_switched": false,
+      "overlap": false,
+      "active_speakers": [
+        "d_kncw84ed"
+      ],
+      "levels_db": {
+        "Ankit Anand": -12.2
+      }
+    },
+    {
+      "type": "attribution",
+      "timestamp": 1791061857917,
+      "dominant_speaker": null,
+      "speaker_name": null,
+      "speaker_switched": false,
+      "overlap": false,
+      "active_speakers": [
+        "d_kncw84ed"
+      ],
+      "levels_db": {
+        "Ankit Anand": -13.6
+      }
+    },
+    {
+      "type": "attribution",
+      "timestamp": 1791061857967,
+      "dominant_speaker": null,
+      "speaker_name": null,
+      "speaker_switched": false,
+      "overlap": false,
+      "active_speakers": [
+        "d_kncw84ed"
+      ],
+      "levels_db": {
+        "Ankit Anand": -15.0
+      }
+    },
+    {
+      "type": "attribution",
+      "timestamp": 1791061857967,
+      "dominant_speaker": null,
+      "speaker_name": null,
+      "speaker_switched": false,
+      "overlap": false,
+      "active_speakers": [
+        "d_kncw84ed"
+      ],
+      "levels_db": {
+        "Ankit Anand": -16.2
+      }
+    },
+    {
+      "type": "attribution",
+      "timestamp": 1791061857967,
+      "dominant_speaker": null,
+      "speaker_name": null,
+      "speaker_switched": false,
+      "overlap": false,
+      "active_speakers": [
+        "d_kncw84ed"
+      ],
+      "levels_db": {
+        "Ankit Anand": -16.9
+      }
+    },
+    {
+      "type": "attribution",
+      "timestamp": 1791061858022,
+      "dominant_speaker": "d_kncw84ed",
+      "speaker_name": "Ankit Anand",
+      "speaker_switched": true,
+      "overlap": false,
+      "active_speakers": [
+        "d_kncw84ed"
+      ],
+      "levels_db": {
+        "Ankit Anand": -18.0
+      }
+    },
+    {
+      "type": "attribution",
+      "timestamp": 1791061858022,
+      "dominant_speaker": "d_kncw84ed",
+      "speaker_name": "Ankit Anand",
+      "speaker_switched": false,
+      "overlap": false,
+      "active_speakers": [
+        "d_kncw84ed"
+      ],
+      "levels_db": {
+        "Ankit Anand": -19.5
+      }
+    },
+    {
+      "type": "attribution",
+      "timestamp": 1791061858069,
+      "dominant_speaker": "d_kncw84ed",
+      "speaker_name": "Ankit Anand",
+      "speaker_switched": false,
+      "overlap": false,
+      "active_speakers": [
+        "d_kncw84ed"
+      ],
+      "levels_db": {
+        "Ankit Anand": -20.4
+      }
+    },
+    {
+      "type": "attribution",
+      "timestamp": 1791061858069,
+      "dominant_speaker": "d_kncw84ed",
+      "speaker_name": "Ankit Anand",
+      "speaker_switched": false,
+      "overlap": false,
+      "active_speakers": [
+        "d_kncw84ed"
+      ],
+      "levels_db": {
+        "Ankit Anand": -21.3
+      }
+    },
+    {
+      "type": "attribution",
+      "timestamp": 1791061858118,
+      "dominant_speaker": "d_kncw84ed",
+      "speaker_name": "Ankit Anand",
+      "speaker_switched": false,
+      "overlap": false,
+      "active_speakers": [
+        "d_kncw84ed"
+      ],
+      "levels_db": {
+        "Ankit Anand": -22.3
+      }
+    },
+    {
+      "type": "attribution",
+      "timestamp": 1791061858118,
+      "dominant_speaker": "d_kncw84ed",
+      "speaker_name": "Ankit Anand",
+      "speaker_switched": false,
+      "overlap": false,
+      "active_speakers": [
+        "d_kncw84ed"
+      ],
+      "levels_db": {
+        "Ankit Anand": -22.8
+      }
+    },
+    {
+      "type": "attribution",
+      "timestamp": 1791061858118,
+      "dominant_speaker": "d_kncw84ed",
+      "speaker_name": "Ankit Anand",
+      "speaker_switched": false,
+      "overlap": false,
+      "active_speakers": [
+        "d_kncw84ed"
+      ],
+      "levels_db": {
+        "Ankit Anand": -23.7
+      }
+    },
+    {
+      "type": "attribution",
+      "timestamp": 1791061858168,
+      "dominant_speaker": "d_kncw84ed",
+      "speaker_name": "Ankit Anand",
+      "speaker_switched": false,
+      "overlap": false,
+      "active_speakers": [
+        "d_kncw84ed"
+      ],
+      "levels_db": {
+        "Ankit Anand": -24.2
+      }
+    },
+    {
+      "type": "attribution",
+      "timestamp": 1791061858168,
+      "dominant_speaker": "d_kncw84ed",
+      "speaker_name": "Ankit Anand",
+      "speaker_switched": false,
+      "overlap": false,
+      "active_speakers": [
+        "d_kncw84ed"
+      ],
+      "levels_db": {
+        "Ankit Anand": -24.6
+      }
+    },
+    {
+      "type": "attribution",
+      "timestamp": 1791061858219,
+      "dominant_speaker": "d_kncw84ed",
+      "speaker_name": "Ankit Anand",
+      "speaker_switched": false,
+      "overlap": false,
+      "active_speakers": [
+        "d_kncw84ed"
+      ],
+      "levels_db": {
+        "Ankit Anand": -25.6
+      }
+    },
+    {
+      "type": "attribution",
+      "timestamp": 1791061858219,
+      "dominant_speaker": "d_kncw84ed",
+      "speaker_name": "Ankit Anand",
+      "speaker_switched": false,
+      "overlap": false,
+      "active_speakers": [
+        "d_kncw84ed"
+      ],
+      "levels_db": {
+        "Ankit Anand": -26.0
+      }
+    },
+    {
+      "type": "attribution",
+      "timestamp": 1791061858219,
+      "dominant_speaker": "d_kncw84ed",
+      "speaker_name": "Ankit Anand",
+      "speaker_switched": false,
+      "overlap": false,
+      "active_speakers": [
+        "d_kncw84ed"
+      ],
+      "levels_db": {
+        "Ankit Anand": -25.9
+      }
+    },
+    {
+      "type": "attribution",
+      "timestamp": 1791061858270,
+      "dominant_speaker": "d_kncw84ed",
+      "speaker_name": "Ankit Anand",
+      "speaker_switched": false,
+      "overlap": false,
+      "active_speakers": [
+        "d_kncw84ed"
+      ],
+      "levels_db": {
+        "Ankit Anand": -25.4
+      }
+    },
+    {
+      "type": "attribution",
+      "timestamp": 1791061858270,
+      "dominant_speaker": "d_kncw84ed",
+      "speaker_name": "Ankit Anand",
+      "speaker_switched": false,
+      "overlap": false,
+      "active_speakers": [
+        "d_kncw84ed"
+      ],
+      "levels_db": {
+        "Ankit Anand": -26.5
+      }
+    },
+    {
+      "type": "attribution",
+      "timestamp": 1791061858270,
+      "dominant_speaker": "d_kncw84ed",
+      "speaker_name": "Ankit Anand",
+      "speaker_switched": false,
+      "overlap": false,
+      "active_speakers": [
+        "d_kncw84ed"
+      ],
+      "levels_db": {
+        "Ankit Anand": -27.0
+      }
+    },
+    {
+      "type": "attribution",
+      "timestamp": 1791061858317,
+      "dominant_speaker": "d_kncw84ed",
+      "speaker_name": "Ankit Anand",
+      "speaker_switched": false,
+      "overlap": false,
+      "active_speakers": [
+        "d_kncw84ed"
+      ],
+      "levels_db": {
+        "Ankit Anand": -28.3
+      }
+    },
+    {
+      "type": "attribution",
+      "timestamp": 1791061858317,
+      "dominant_speaker": "d_kncw84ed",
+      "speaker_name": "Ankit Anand",
+      "speaker_switched": false,
+      "overlap": false,
+      "active_speakers": [
+        "d_kncw84ed"
+      ],
+      "levels_db": {
+        "Ankit Anand": -28.3
+      }
+    },
+    {
+      "type": "attribution",
+      "timestamp": 1791061858373,
+      "dominant_speaker": "d_kncw84ed",
+      "speaker_name": "Ankit Anand",
+      "speaker_switched": false,
+      "overlap": false,
+      "active_speakers": [
+        "d_kncw84ed"
+      ],
+      "levels_db": {
+        "Ankit Anand": -28.2
+      }
+    },
+    {
+      "type": "attribution",
+      "timestamp": 1791061858373,
+      "dominant_speaker": "d_kncw84ed",
+      "speaker_name": "Ankit Anand",
+      "speaker_switched": false,
+      "overlap": false,
+      "active_speakers": [
+        "d_kncw84ed"
+      ],
+      "levels_db": {
+        "Ankit Anand": -28.8
+      }
+    },
+    {
+      "type": "attribution",
+      "timestamp": 1791061858420,
+      "dominant_speaker": "d_kncw84ed",
+      "speaker_name": "Ankit Anand",
+      "speaker_switched": false,
+      "overlap": false,
+      "active_speakers": [
+        "d_kncw84ed"
+      ],
+      "levels_db": {
+        "Ankit Anand": -28.4
+      }
+    },
+    {
+      "type": "attribution",
+      "timestamp": 1791061858420,
+      "dominant_speaker": "d_kncw84ed",
+      "speaker_name": "Ankit Anand",
+      "speaker_switched": false,
+      "overlap": false,
+      "active_speakers": [
+        "d_kncw84ed"
+      ],
+      "levels_db": {
+        "Ankit Anand": -27.4
+      }
+    },
+    {
+      "type": "attribution",
+      "timestamp": 1791061858420,
+      "dominant_speaker": "d_kncw84ed",
+      "speaker_name": "Ankit Anand",
+      "speaker_switched": false,
+      "overlap": false,
+      "active_speakers": [
+        "d_kncw84ed"
+      ],
+      "levels_db": {
+        "Ankit Anand": -28.6
+      }
+    },
+    {
+      "type": "attribution",
+      "timestamp": 1791061858468,
+      "dominant_speaker": "d_kncw84ed",
+      "speaker_name": "Ankit Anand",
+      "speaker_switched": false,
+      "overlap": false,
+      "active_speakers": [
+        "d_kncw84ed"
+      ],
+      "levels_db": {
+        "Ankit Anand": -28.9
+      }
+    },
+    {
+      "type": "attribution",
+      "timestamp": 1791061858468,
+      "dominant_speaker": "d_kncw84ed",
+      "speaker_name": "Ankit Anand",
+      "speaker_switched": false,
+      "overlap": false,
+      "active_speakers": [
+        "d_kncw84ed"
+      ],
+      "levels_db": {
+        "Ankit Anand": -30.5
+      }
+    },
+    {
+      "type": "attribution",
+      "timestamp": 1791061858468,
+      "dominant_speaker": "d_kncw84ed",
+      "speaker_name": "Ankit Anand",
+      "speaker_switched": false,
+      "overlap": false,
+      "active_speakers": [
+        "d_kncw84ed"
+      ],
+      "levels_db": {
+        "Ankit Anand": -30.5
+      }
+    },
+    {
+      "type": "attribution",
+      "timestamp": 1791061858517,
+      "dominant_speaker": "d_kncw84ed",
+      "speaker_name": "Ankit Anand",
+      "speaker_switched": false,
+      "overlap": false,
+      "active_speakers": [
+        "d_kncw84ed"
+      ],
+      "levels_db": {
+        "Ankit Anand": -28.6
+      }
+    },
+    {
+      "type": "attribution",
+      "timestamp": 1791061858517,
+      "dominant_speaker": "d_kncw84ed",
+      "speaker_name": "Ankit Anand",
+      "speaker_switched": false,
+      "overlap": false,
+      "active_speakers": [
+        "d_kncw84ed"
+      ],
+      "levels_db": {
+        "Ankit Anand": -29.5
+      }
+    },
+    {
+      "type": "attribution",
+      "timestamp": 1791061858567,
+      "dominant_speaker": "d_kncw84ed",
+      "speaker_name": "Ankit Anand",
+      "speaker_switched": false,
+      "overlap": false,
+      "active_speakers": [
+        "d_kncw84ed"
+      ],
+      "levels_db": {
+        "Ankit Anand": -31.1
+      }
+    },
+    {
+      "type": "attribution",
+      "timestamp": 1791061858567,
+      "dominant_speaker": "d_kncw84ed",
+      "speaker_name": "Ankit Anand",
+      "speaker_switched": false,
+      "overlap": false,
+      "active_speakers": [
+        "d_kncw84ed"
+      ],
+      "levels_db": {
+        "Ankit Anand": -32.3
+      }
+    },
+    {
+      "type": "attribution",
+      "timestamp": 1791061858567,
+      "dominant_speaker": "d_kncw84ed",
+      "speaker_name": "Ankit Anand",
+      "speaker_switched": false,
+      "overlap": false,
+      "active_speakers": [
+        "d_kncw84ed"
+      ],
+      "levels_db": {
+        "Ankit Anand": -32.5
+      }
+    },
+    {
+      "type": "attribution",
+      "timestamp": 1791061858626,
+      "dominant_speaker": "d_kncw84ed",
+      "speaker_name": "Ankit Anand",
+      "speaker_switched": false,
+      "overlap": false,
+      "active_speakers": [
+        "d_kncw84ed"
+      ],
+      "levels_db": {
+        "Ankit Anand": -30.8
+      }
+    },
+    {
+      "type": "attribution",
+      "timestamp": 1791061858626,
+      "dominant_speaker": "d_kncw84ed",
+      "speaker_name": "Ankit Anand",
+      "speaker_switched": false,
+      "overlap": false,
+      "active_speakers": [
+        "d_kncw84ed"
+      ],
+      "levels_db": {
+        "Ankit Anand": -30.8
+      }
+    },
+    {
+      "type": "attribution",
+      "timestamp": 1791061858671,
+      "dominant_speaker": "d_kncw84ed",
+      "speaker_name": "Ankit Anand",
+      "speaker_switched": false,
+      "overlap": false,
+      "active_speakers": [
+        "d_kncw84ed"
+      ],
+      "levels_db": {
+        "Ankit Anand": -30.4
+      }
+    },
+    {
+      "type": "attribution",
+      "timestamp": 1791061858671,
+      "dominant_speaker": "d_kncw84ed",
+      "speaker_name": "Ankit Anand",
+      "speaker_switched": false,
+      "overlap": false,
+      "active_speakers": [
+        "d_kncw84ed"
+      ],
+      "levels_db": {
+        "Ankit Anand": -30.5
+      }
+    },
+    {
+      "type": "attribution",
+      "timestamp": 1791061858720,
+      "dominant_speaker": "d_kncw84ed",
+      "speaker_name": "Ankit Anand",
+      "speaker_switched": false,
+      "overlap": false,
+      "active_speakers": [
+        "d_kncw84ed"
+      ],
+      "levels_db": {
+        "Ankit Anand": -30.3
+      }
+    },
+    {
+      "type": "attribution",
+      "timestamp": 1791061858720,
+      "dominant_speaker": "d_kncw84ed",
+      "speaker_name": "Ankit Anand",
+      "speaker_switched": false,
+      "overlap": false,
+      "active_speakers": [
+        "d_kncw84ed"
+      ],
+      "levels_db": {
+        "Ankit Anand": -31.8
+      }
+    },
+    {
+      "type": "attribution",
+      "timestamp": 1791061858720,
+      "dominant_speaker": "d_kncw84ed",
+      "speaker_name": "Ankit Anand",
+      "speaker_switched": false,
+      "overlap": false,
+      "active_speakers": [
+        "d_kncw84ed"
+      ],
+      "levels_db": {
+        "Ankit Anand": -32.4
+      }
+    },
+    {
+      "type": "attribution",
+      "timestamp": 1791061858773,
+      "dominant_speaker": "d_kncw84ed",
+      "speaker_name": "Ankit Anand",
+      "speaker_switched": false,
+      "overlap": false,
+      "active_speakers": [
+        "d_kncw84ed"
+      ],
+      "levels_db": {
+        "Ankit Anand": -31.5
+      }
+    },
+    {
+      "type": "attribution",
+      "timestamp": 1791061858773,
+      "dominant_speaker": "d_kncw84ed",
+      "speaker_name": "Ankit Anand",
+      "speaker_switched": false,
+      "overlap": false,
+      "active_speakers": [
+        "d_kncw84ed"
+      ],
+      "levels_db": {
+        "Ankit Anand": -32.1
+      }
+    },
+    {
+      "type": "attribution",
+      "timestamp": 1791061858827,
+      "dominant_speaker": "d_kncw84ed",
+      "speaker_name": "Ankit Anand",
+      "speaker_switched": false,
+      "overlap": false,
+      "active_speakers": [
+        "d_kncw84ed"
+      ],
+      "levels_db": {
+        "Ankit Anand": -32.6
+      }
+    },
+    {
+      "type": "attribution",
+      "timestamp": 1791061858827,
+      "dominant_speaker": "d_kncw84ed",
+      "speaker_name": "Ankit Anand",
+      "speaker_switched": false,
+      "overlap": false,
+      "active_speakers": [
+        "d_kncw84ed"
+      ],
+      "levels_db": {
+        "Ankit Anand": -32.2
+      }
+    },
+    {
+      "type": "attribution",
+      "timestamp": 1791061858827,
+      "dominant_speaker": "d_kncw84ed",
+      "speaker_name": "Ankit Anand",
+      "speaker_switched": false,
+      "overlap": false,
+      "active_speakers": [
+        "d_kncw84ed"
+      ],
+      "levels_db": {
+        "Ankit Anand": -31.9
+      }
+    },
+    {
+      "type": "attribution",
+      "timestamp": 1791061858870,
+      "dominant_speaker": "d_kncw84ed",
+      "speaker_name": "Ankit Anand",
+      "speaker_switched": false,
+      "overlap": false,
+      "active_speakers": [
+        "d_kncw84ed"
+      ],
+      "levels_db": {
+        "Ankit Anand": -33.2
+      }
+    },
+    {
+      "type": "attribution",
+      "timestamp": 1791061858870,
+      "dominant_speaker": "d_kncw84ed",
+      "speaker_name": "Ankit Anand",
+      "speaker_switched": false,
+      "overlap": false,
+      "active_speakers": [
+        "d_kncw84ed"
+      ],
+      "levels_db": {
+        "Ankit Anand": -34.1
+      }
+    },
+    {
+      "type": "attribution",
+      "timestamp": 1791061858921,
+      "dominant_speaker": "d_kncw84ed",
+      "speaker_name": "Ankit Anand",
+      "speaker_switched": false,
+      "overlap": false,
+      "active_speakers": [
+        "d_kncw84ed"
+      ],
+      "levels_db": {
+        "Ankit Anand": -36.7
+      }
+    },
+    {
+      "type": "attribution",
+      "timestamp": 1791061858921,
+      "dominant_speaker": "d_kncw84ed",
+      "speaker_name": "Ankit Anand",
+      "speaker_switched": false,
+      "overlap": false,
+      "active_speakers": [
+        "d_kncw84ed"
+      ],
+      "levels_db": {
+        "Ankit Anand": -34.5
+      }
+    },
+    {
+      "type": "attribution",
+      "timestamp": 1791061858921,
+      "dominant_speaker": "d_kncw84ed",
+      "speaker_name": "Ankit Anand",
+      "speaker_switched": false,
+      "overlap": false,
+      "active_speakers": [
+        "d_kncw84ed"
+      ],
+      "levels_db": {
+        "Ankit Anand": -33.0
+      }
+    },
+    {
+      "type": "attribution",
+      "timestamp": 1791061858968,
+      "dominant_speaker": "d_kncw84ed",
+      "speaker_name": "Ankit Anand",
+      "speaker_switched": false,
+      "overlap": false,
+      "active_speakers": [
+        "d_kncw84ed"
+      ],
+      "levels_db": {
+        "Ankit Anand": -33.2
+      }
+    },
+    {
+      "type": "attribution",
+      "timestamp": 1791061858968,
+      "dominant_speaker": "d_kncw84ed",
+      "speaker_name": "Ankit Anand",
+      "speaker_switched": false,
+      "overlap": false,
+      "active_speakers": [
+        "d_kncw84ed"
+      ],
+      "levels_db": {
+        "Ankit Anand": -32.9
+      }
+    },
+    {
+      "type": "attribution",
+      "timestamp": 1791061859018,
+      "dominant_speaker": "d_kncw84ed",
+      "speaker_name": "Ankit Anand",
+      "speaker_switched": false,
+      "overlap": false,
+      "active_speakers": [
+        "d_kncw84ed"
+      ],
+      "levels_db": {
+        "Ankit Anand": -41.1
+      }
+    },
+    {
+      "type": "attribution",
+      "timestamp": 1791061859018,
+      "dominant_speaker": "d_kncw84ed",
+      "speaker_name": "Ankit Anand",
+      "speaker_switched": false,
+      "overlap": false,
+      "active_speakers": [
+        "d_kncw84ed"
+      ],
+      "levels_db": {
+        "Ankit Anand": -37.3
+      }
+    },
+    {
+      "type": "attribution",
+      "timestamp": 1791061859018,
+      "dominant_speaker": "d_kncw84ed",
+      "speaker_name": "Ankit Anand",
+      "speaker_switched": false,
+      "overlap": false,
+      "active_speakers": [
+        "d_kncw84ed"
+      ],
+      "levels_db": {
+        "Ankit Anand": -33.9
+      }
+    },
+    {
+      "type": "attribution",
+      "timestamp": 1791061859068,
+      "dominant_speaker": "d_kncw84ed",
+      "speaker_name": "Ankit Anand",
+      "speaker_switched": false,
+      "overlap": false,
+      "active_speakers": [
+        "d_kncw84ed"
+      ],
+      "levels_db": {
+        "Ankit Anand": -34.1
+      }
+    },
+    {
+      "type": "attribution",
+      "timestamp": 1791061859068,
+      "dominant_speaker": "d_kncw84ed",
+      "speaker_name": "Ankit Anand",
+      "speaker_switched": false,
+      "overlap": false,
+      "active_speakers": [
+        "d_kncw84ed"
+      ],
+      "levels_db": {
+        "Ankit Anand": -37.0
+      }
+    },
+    {
+      "type": "attribution",
+      "timestamp": 1791061859068,
+      "dominant_speaker": "d_kncw84ed",
+      "speaker_name": "Ankit Anand",
+      "speaker_switched": false,
+      "overlap": false,
+      "active_speakers": [
+        "d_kncw84ed"
+      ],
+      "levels_db": {
+        "Ankit Anand": -33.2
+      }
+    },
+    {
+      "type": "attribution",
+      "timestamp": 1791061859117,
+      "dominant_speaker": "d_kncw84ed",
+      "speaker_name": "Ankit Anand",
+      "speaker_switched": false,
+      "overlap": false,
+      "active_speakers": [
+        "d_kncw84ed"
+      ],
+      "levels_db": {
+        "Ankit Anand": -34.0
+      }
+    },
+    {
+      "type": "attribution",
+      "timestamp": 1791061859117,
+      "dominant_speaker": "d_kncw84ed",
+      "speaker_name": "Ankit Anand",
+      "speaker_switched": false,
+      "overlap": false,
+      "active_speakers": [
+        "d_kncw84ed"
+      ],
+      "levels_db": {
+        "Ankit Anand": -38.7
+      }
+    },
+    {
+      "type": "attribution",
+      "timestamp": 1791061859169,
+      "dominant_speaker": "d_kncw84ed",
+      "speaker_name": "Ankit Anand",
+      "speaker_switched": false,
+      "overlap": false,
+      "active_speakers": [
+        "d_kncw84ed"
+      ],
+      "levels_db": {
+        "Ankit Anand": -32.4
+      }
+    },
+    {
+      "type": "attribution",
+      "timestamp": 1791061859169,
+      "dominant_speaker": "d_kncw84ed",
+      "speaker_name": "Ankit Anand",
+      "speaker_switched": false,
+      "overlap": false,
+      "active_speakers": [
+        "d_kncw84ed"
+      ],
+      "levels_db": {
+        "Ankit Anand": -39.6
+      }
+    },
+    {
+      "type": "attribution",
+      "timestamp": 1791061859218,
+      "dominant_speaker": "d_kncw84ed",
+      "speaker_name": "Ankit Anand",
+      "speaker_switched": false,
+      "overlap": false,
+      "active_speakers": [
+        "d_kncw84ed"
+      ],
+      "levels_db": {
+        "Ankit Anand": -38.4
+      }
+    },
+    {
+      "type": "attribution",
+      "timestamp": 1791061859218,
+      "dominant_speaker": "d_kncw84ed",
+      "speaker_name": "Ankit Anand",
+      "speaker_switched": false,
+      "overlap": false,
+      "active_speakers": [
+        "d_kncw84ed"
+      ],
+      "levels_db": {
+        "Ankit Anand": -41.5
+      }
+    },
+    {
+      "type": "attribution",
+      "timestamp": 1791061859218,
+      "dominant_speaker": "d_kncw84ed",
+      "speaker_name": "Ankit Anand",
+      "speaker_switched": false,
+      "overlap": false,
+      "active_speakers": [
+        "d_kncw84ed"
+      ],
+      "levels_db": {
+        "Ankit Anand": -31.7
+      }
+    },
+    {
+      "type": "attribution",
+      "timestamp": 1791061859272,
+      "dominant_speaker": "d_kncw84ed",
+      "speaker_name": "Ankit Anand",
+      "speaker_switched": false,
+      "overlap": false,
+      "active_speakers": [
+        "d_kncw84ed"
+      ],
+      "levels_db": {
+        "Ankit Anand": -28.9
+      }
+    },
+    {
+      "type": "attribution",
+      "timestamp": 1791061859272,
+      "dominant_speaker": "d_kncw84ed",
+      "speaker_name": "Ankit Anand",
+      "speaker_switched": false,
+      "overlap": false,
+      "active_speakers": [
+        "d_kncw84ed"
+      ],
+      "levels_db": {
+        "Ankit Anand": -33.5
+      }
+    },
+    {
+      "type": "attribution",
+      "timestamp": 1791061859272,
+      "dominant_speaker": "d_kncw84ed",
+      "speaker_name": "Ankit Anand",
+      "speaker_switched": false,
+      "overlap": false,
+      "active_speakers": [
+        "d_kncw84ed"
+      ],
+      "levels_db": {
+        "Ankit Anand": -39.0
+      }
+    },
+    {
+      "type": "attribution",
+      "timestamp": 1791061859317,
+      "dominant_speaker": "d_kncw84ed",
+      "speaker_name": "Ankit Anand",
+      "speaker_switched": false,
+      "overlap": false,
+      "active_speakers": [
+        "d_kncw84ed"
+      ],
+      "levels_db": {
+        "Ankit Anand": -38.2
+      }
+    },
+    {
+      "type": "attribution",
+      "timestamp": 1791061859317,
+      "dominant_speaker": "d_kncw84ed",
+      "speaker_name": "Ankit Anand",
+      "speaker_switched": false,
+      "overlap": false,
+      "active_speakers": [
+        "d_kncw84ed"
+      ],
+      "levels_db": {
+        "Ankit Anand": -36.6
+      }
+    },
+    {
+      "type": "attribution",
+      "timestamp": 1791061859371,
+      "dominant_speaker": "d_kncw84ed",
+      "speaker_name": "Ankit Anand",
+      "speaker_switched": false,
+      "overlap": false,
+      "active_speakers": [
+        "d_kncw84ed"
+      ],
+      "levels_db": {
+        "Ankit Anand": -37.4
+      }
+    },
+    {
+      "type": "attribution",
+      "timestamp": 1791061859371,
+      "dominant_speaker": "d_kncw84ed",
+      "speaker_name": "Ankit Anand",
+      "speaker_switched": false,
+      "overlap": false,
+      "active_speakers": [
+        "d_kncw84ed"
+      ],
+      "levels_db": {
+        "Ankit Anand": -38.3
+      }
+    },
+    {
+      "type": "attribution",
+      "timestamp": 1791061859371,
+      "dominant_speaker": "d_kncw84ed",
+      "speaker_name": "Ankit Anand",
+      "speaker_switched": false,
+      "overlap": false,
+      "active_speakers": [
+        "d_kncw84ed"
+      ],
+      "levels_db": {
+        "Ankit Anand": -33.7
+      }
+    },
+    {
+      "type": "attribution",
+      "timestamp": 1791061859420,
+      "dominant_speaker": "d_kncw84ed",
+      "speaker_name": "Ankit Anand",
+      "speaker_switched": false,
+      "overlap": false,
+      "active_speakers": [
+        "d_kncw84ed"
+      ],
+      "levels_db": {
+        "Ankit Anand": -28.3
+      }
+    },
+    {
+      "type": "attribution",
+      "timestamp": 1791061859420,
+      "dominant_speaker": "d_kncw84ed",
+      "speaker_name": "Ankit Anand",
+      "speaker_switched": false,
+      "overlap": false,
+      "active_speakers": [
+        "d_kncw84ed"
+      ],
+      "levels_db": {
+        "Ankit Anand": -32.7
+      }
+    },
+    {
+      "type": "attribution",
+      "timestamp": 1791061859470,
+      "dominant_speaker": "d_kncw84ed",
+      "speaker_name": "Ankit Anand",
+      "speaker_switched": false,
+      "overlap": false,
+      "active_speakers": [
+        "d_kncw84ed"
+      ],
+      "levels_db": {
+        "Ankit Anand": -37.0
+      }
+    },
+    {
+      "type": "attribution",
+      "timestamp": 1791061859470,
+      "dominant_speaker": "d_kncw84ed",
+      "speaker_name": "Ankit Anand",
+      "speaker_switched": false,
+      "overlap": false,
+      "active_speakers": [
+        "d_kncw84ed"
+      ],
+      "levels_db": {
+        "Ankit Anand": -38.6
+      }
+    },
+    {
+      "type": "attribution",
+      "timestamp": 1791061859519,
+      "dominant_speaker": "d_kncw84ed",
+      "speaker_name": "Ankit Anand",
+      "speaker_switched": false,
+      "overlap": false,
+      "active_speakers": [
+        "d_kncw84ed"
+      ],
+      "levels_db": {
+        "Ankit Anand": -32.4
+      }
+    },
+    {
+      "type": "attribution",
+      "timestamp": 1791061859519,
+      "dominant_speaker": null,
+      "speaker_name": null,
+      "speaker_switched": true,
+      "overlap": false,
+      "active_speakers": [],
+      "levels_db": {
+        "Ankit Anand": -51.8
+      }
+    },
+    {
+      "type": "attribution",
+      "timestamp": 1791061859519,
+      "dominant_speaker": null,
+      "speaker_name": null,
+      "speaker_switched": false,
+      "overlap": false,
+      "active_speakers": [
+        "d_kncw84ed"
+      ],
+      "levels_db": {
+        "Ankit Anand": -37.5
+      }
+    },
+    {
+      "type": "attribution",
+      "timestamp": 1791061859571,
+      "dominant_speaker": null,
+      "speaker_name": null,
+      "speaker_switched": false,
+      "overlap": false,
+      "active_speakers": [
+        "d_kncw84ed"
+      ],
+      "levels_db": {
+        "Ankit Anand": -36.9
+      }
+    },
+    {
+      "type": "attribution",
+      "timestamp": 1791061859572,
+      "dominant_speaker": null,
+      "speaker_name": null,
+      "speaker_switched": false,
+      "overlap": false,
+      "active_speakers": [
+        "d_kncw84ed"
+      ],
+      "levels_db": {
+        "Ankit Anand": -42.1
+      }
+    },
+    {
+      "type": "attribution",
+      "timestamp": 1791061859572,
+      "dominant_speaker": null,
+      "speaker_name": null,
+      "speaker_switched": false,
+      "overlap": false,
+      "active_speakers": [
+        "d_kncw84ed"
+      ],
+      "levels_db": {
+        "Ankit Anand": -37.8
+      }
+    },
+    {
+      "type": "attribution",
+      "timestamp": 1791061859617,
+      "dominant_speaker": null,
+      "speaker_name": null,
+      "speaker_switched": false,
+      "overlap": false,
+      "active_speakers": [
+        "d_kncw84ed"
+      ],
+      "levels_db": {
+        "Ankit Anand": -36.0
+      }
+    },
+    {
+      "type": "attribution",
+      "timestamp": 1791061859617,
+      "dominant_speaker": null,
+      "speaker_name": null,
+      "speaker_switched": false,
+      "overlap": false,
+      "active_speakers": [
+        "d_kncw84ed"
+      ],
+      "levels_db": {
+        "Ankit Anand": -32.9
+      }
+    },
+    {
+      "type": "attribution",
+      "timestamp": 1791061859669,
+      "dominant_speaker": "d_kncw84ed",
+      "speaker_name": "Ankit Anand",
+      "speaker_switched": true,
+      "overlap": false,
+      "active_speakers": [
+        "d_kncw84ed"
+      ],
+      "levels_db": {
+        "Ankit Anand": -34.0
+      }
+    },
+    {
+      "type": "attribution",
+      "timestamp": 1791061859669,
+      "dominant_speaker": null,
+      "speaker_name": null,
+      "speaker_switched": true,
+      "overlap": false,
+      "active_speakers": [],
+      "levels_db": {
+        "Ankit Anand": -47.7
+      }
+    },
+    {
+      "type": "attribution",
+      "timestamp": 1791061859721,
+      "dominant_speaker": null,
+      "speaker_name": null,
+      "speaker_switched": false,
+      "overlap": false,
+      "active_speakers": [
+        "d_kncw84ed"
+      ],
+      "levels_db": {
+        "Ankit Anand": -37.9
+      }
+    },
+    {
+      "type": "attribution",
+      "timestamp": 1791061859721,
+      "dominant_speaker": null,
+      "speaker_name": null,
+      "speaker_switched": false,
+      "overlap": false,
+      "active_speakers": [
+        "d_kncw84ed"
+      ],
+      "levels_db": {
+        "Ankit Anand": -39.4
+      }
+    },
+    {
+      "type": "attribution",
+      "timestamp": 1791061859721,
+      "dominant_speaker": null,
+      "speaker_name": null,
+      "speaker_switched": false,
+      "overlap": false,
+      "active_speakers": [
+        "d_kncw84ed"
+      ],
+      "levels_db": {
+        "Ankit Anand": -41.9
+      }
+    },
+    {
+      "type": "attribution",
+      "timestamp": 1791061859769,
+      "dominant_speaker": null,
+      "speaker_name": null,
+      "speaker_switched": false,
+      "overlap": false,
+      "active_speakers": [],
+      "levels_db": {
+        "Ankit Anand": -44.6
+      }
+    },
+    {
+      "type": "attribution",
+      "timestamp": 1791061859769,
+      "dominant_speaker": null,
+      "speaker_name": null,
+      "speaker_switched": false,
+      "overlap": false,
+      "active_speakers": [],
+      "levels_db": {
+        "Ankit Anand": -48.9
+      }
+    },
+    {
+      "type": "attribution",
+      "timestamp": 1791061859822,
+      "dominant_speaker": null,
+      "speaker_name": null,
+      "speaker_switched": false,
+      "overlap": false,
+      "active_speakers": [],
+      "levels_db": {
+        "Ankit Anand": -45.5
+      }
+    },
+    {
+      "type": "attribution",
+      "timestamp": 1791061859822,
+      "dominant_speaker": null,
+      "speaker_name": null,
+      "speaker_switched": false,
+      "overlap": false,
+      "active_speakers": [
+        "d_kncw84ed"
+      ],
+      "levels_db": {
+        "Ankit Anand": -39.2
+      }
+    },
+    {
+      "type": "attribution",
+      "timestamp": 1791061859822,
+      "dominant_speaker": null,
+      "speaker_name": null,
+      "speaker_switched": false,
+      "overlap": false,
+      "active_speakers": [
+        "d_kncw84ed"
+      ],
+      "levels_db": {
+        "Ankit Anand": -42.3
+      }
+    },
+    {
+      "type": "attribution",
+      "timestamp": 1791061859869,
+      "dominant_speaker": null,
+      "speaker_name": null,
+      "speaker_switched": false,
+      "overlap": false,
+      "active_speakers": [
+        "d_kncw84ed"
+      ],
+      "levels_db": {
+        "Ankit Anand": -40.7
+      }
+    },
+    {
+      "type": "attribution",
+      "timestamp": 1791061859869,
+      "dominant_speaker": null,
+      "speaker_name": null,
+      "speaker_switched": false,
+      "overlap": false,
+      "active_speakers": [
+        "d_kncw84ed"
+      ],
+      "levels_db": {
+        "Ankit Anand": -39.1
+      }
+    },
+    {
+      "type": "attribution",
+      "timestamp": 1791061859870,
+      "dominant_speaker": null,
+      "speaker_name": null,
+      "speaker_switched": false,
+      "overlap": false,
+      "active_speakers": [
+        "d_kncw84ed"
+      ],
+      "levels_db": {
+        "Ankit Anand": -40.5
+      }
+    },
+    {
+      "type": "attribution",
+      "timestamp": 1791061859917,
+      "dominant_speaker": null,
+      "speaker_name": null,
+      "speaker_switched": false,
+      "overlap": false,
+      "active_speakers": [],
+      "levels_db": {
+        "Ankit Anand": -45.7
+      }
+    },
+    {
+      "type": "attribution",
+      "timestamp": 1791061859917,
+      "dominant_speaker": null,
+      "speaker_name": null,
+      "speaker_switched": false,
+      "overlap": false,
+      "active_speakers": [],
+      "levels_db": {
+        "Ankit Anand": -43.6
+      }
+    },
+    {
+      "type": "attribution",
+      "timestamp": 1791061859969,
+      "dominant_speaker": null,
+      "speaker_name": null,
+      "speaker_switched": false,
+      "overlap": false,
+      "active_speakers": [
+        "d_kncw84ed"
+      ],
+      "levels_db": {
+        "Ankit Anand": -41.7
+      }
+    },
+    {
+      "type": "attribution",
+      "timestamp": 1791061859969,
+      "dominant_speaker": null,
+      "speaker_name": null,
+      "speaker_switched": false,
+      "overlap": false,
+      "active_speakers": [],
+      "levels_db": {
+        "Ankit Anand": -46.2
+      }
+    }
+  ]
+}
