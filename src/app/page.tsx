@@ -429,8 +429,17 @@ export default function Home() {
       setPhase("live");
       setStatus("Your room is ready");
       if (data.meetingEnded) {
-        setMeetingEnded(true);
-        setAiStage("processing");
+        if (data.aiSummaryStatus === "ready" && data.aiSummary) {
+          setAiSummary(data.aiSummary);
+          setAiStage("ready");
+          setStatus("Meeting summary ready");
+        } else if (data.aiSummaryStatus === "error") {
+          setAiStage("error");
+          setMeetingNotice("The transcript could not be finalized.");
+        } else {
+          setAiStage("processing");
+          setStatus("AI is generating the meeting summary");
+        }
       }
     }
     if (data.type === "ai_summary_status") {

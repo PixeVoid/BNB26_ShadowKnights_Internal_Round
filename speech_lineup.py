@@ -108,6 +108,8 @@ class RoomState:
         self.speech_tasks = set()
 
         self.meeting_ended = False
+        self.ai_summary: Optional[str] = None
+        self.ai_summary_status: Optional[str] = None
         self.end_proposal: Optional[dict] = None
 
     async def broadcast(self, message: dict):
@@ -273,6 +275,7 @@ class RoomState:
             logger.info("Skipping AI summarization: GEMINI_API_KEY not set or google-genai not installed.")
             return
 
+        self.ai_summary_status = "generating"
         await self.broadcast({"type": "ai_summary_status", "status": "generating"})
         
         # Build prompt
@@ -293,12 +296,15 @@ class RoomState:
 
         try:
             summary = await asyncio.to_thread(_generate_summary)
+            self.ai_summary = summary
+            self.ai_summary_status = "ready"
             await self.broadcast({
                 "type": "ai_summary",
                 "markdown": summary,
             })
         except Exception as exc:
             logger.exception("AI Summarization failed")
+            self.ai_summary_status = "error"
             await self.broadcast({
                 "type": "ai_summary_error",
                 "message": str(exc),
@@ -376,6 +382,8 @@ async def websocket_session(websocket: WebSocket, room_id: str):
             "lastT": int(room.latest_level_t),
             "lastSeq": int(last_seq),
             "meetingEnded": room.meeting_ended,
+            "aiSummaryStatus": room.ai_summary_status,
+            "aiSummary": room.ai_summary,
         })
         for p_dev, p_data in room.participants.items():
             if p_dev != dev:
