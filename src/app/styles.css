@@ -2669,6 +2669,25 @@ main.phone-preview .mic-waveform i { width: 3px; max-height: 27px; }
   color: #328b70;
   box-shadow: 0 0 0 4px #55bca41a;
 }
+.mic-control .mic-button {
+  min-width: 132px;
+  height: 44px;
+  padding: 0 8px 0 12px;
+  border: 1px solid #9fc6ce;
+  border-radius: 14px;
+  background: linear-gradient(135deg, #eaf5f6, #d6e9ef);
+  color: #315760;
+  box-shadow: 0 4px 12px #47788318, inset 0 1px #ffffffa8;
+  transition: transform .18s ease, box-shadow .18s ease, border-color .18s ease;
+}
+.mic-control .mic-button:hover:not(:disabled) { transform: translateY(-1px); border-color: #6f9fa9; box-shadow: 0 7px 16px #47788326, inset 0 1px #ffffffb8; }
+.mic-control .mic-button:focus-visible { outline: 3px solid #8ebdc633; outline-offset: 3px; }
+.mic-button-label { flex: 1; text-align: left; font-size: 10px; font-weight: 600; white-space: nowrap; }
+.mic-button-icon { width: 28px; height: 28px; display: inline-flex; align-items: center; justify-content: center; border: 1px solid #86b2bc; border-radius: 10px; background: #c6e1e8; color: #376875 !important; }
+.mic-button-icon svg { width: 15px; height: 15px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+.mic-control .mic-button.on { border-color: #93cbb9; background: linear-gradient(135deg, #eef9f4, #d8efe5); color: #2f6c59; }
+.mic-control .mic-button.on .mic-button-icon { border-color: #82bca8; background: #c5e6d8; color: #28745e !important; }
+.mic-control .mic-button:disabled { filter: saturate(.7); }
 .connection-pill.connected { color: #477864; }
 .connection-pill.connected i { background: #54ad88; box-shadow: 0 0 0 3px #54ad8820; }
 .room-code-button { color: #416f78; background: #eef7f6; border-color: #b9d8d7; }
@@ -2687,3 +2706,13 @@ main.phone-preview .mic-waveform i { width: 3px; max-height: 27px; }
 .meeting-notice { color: #886734; }
 .ai-stage-error .meeting-notice { color: #a24d45; }
 main.phone-preview .mic-icon { width: 25px; height: 25px; flex-basis: 25px; }
+main.phone-preview .mic-control .mic-button { min-width: 112px; height: 40px; padding-left: 9px; border-radius: 12px; }
+main.phone-preview .mic-button-label { font-size: 9px; }
+main.phone-preview .mic-button-icon { width: 25px; height: 25px; border-radius: 8px; }
+main:not(.phone-preview) {
+  height: auto;
+  min-height: 100vh;
+  min-height: 100dvh;
+  overflow-x: hidden;
+  overflow-y: auto;
+}

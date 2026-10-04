@@ -861,7 +861,7 @@ export default function Home() {
                   })}
                 </div>
                 <button type="button" aria-pressed={micOn} className={`mic-button ${micOn ? "on" : ""}`} onClick={toggleMic} disabled={aiStage !== "live"}>
-                  {aiStage !== "live" ? "Mic paused" : micOn ? "Turn mic off" : "Turn mic on"}<span>{micOn ? "■" : "●"}</span>
+                  <span className="mic-button-label">{aiStage !== "live" ? "Mic paused" : micOn ? "Turn mic off" : "Turn mic on"}</span><span className="mic-button-icon"><MicIcon /></span>
                 </button>
                 {error && <p className="mic-error" role="alert">{error}</p>}
               </section>
