@@ -62,6 +62,8 @@ export function useRoundtableAudio(cfg: RoundtableAudioConfig) {
 
     if (!parts.current.audio) {
       setError(null);
+      modeRef.current = 'webspeech';
+      setMode('webspeech');
       const dev = getDevId();
       const store = new LevelStore();
       let link!: SessionLink;
@@ -151,6 +153,10 @@ export function useRoundtableAudio(cfg: RoundtableAudioConfig) {
     });
     p.asr = asr;
     asr.start();
+    // `unsupported` can switch this on synchronously (the normal mobile
+    // path), but explicitly syncing here also covers browsers that report
+    // their Web Speech failure only after startup.
+    if (modeRef.current === 'pcm') audio.setPcm(true);
     try {
       p.wake = await (navigator as any).wakeLock?.request('screen');
     } catch { /* ignore */ }

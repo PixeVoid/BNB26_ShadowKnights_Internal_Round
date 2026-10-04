@@ -39,12 +39,15 @@ export class AudioClient {
   async start() {
     if (!window.isSecureContext) throw new Error('HTTPS is required for microphone access');
 
+    // Keep these as ideal preferences rather than exact constraints. Several
+    // mobile browsers reject the request when one of the audio controls is not
+    // supported by the selected input device.
     this.stream = await navigator.mediaDevices.getUserMedia({
       audio: {
-        echoCancellation: false, // we want raw relative levels between phones
-        noiseSuppression: false,
-        autoGainControl: false,
-        channelCount: 1,
+        echoCancellation: { ideal: false }, // we want raw relative levels between phones
+        noiseSuppression: { ideal: false },
+        autoGainControl: { ideal: false },
+        channelCount: { ideal: 1 },
       },
       video: false,
     });

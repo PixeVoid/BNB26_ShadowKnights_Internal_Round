@@ -34,8 +34,23 @@ export class AsrClient {
     return typeof window !== 'undefined' && !!((window as any).SpeechRecognition || (window as any).webkitSpeechRecognition);
   }
 
+  /**
+   * Mobile Web Speech implementations commonly require their own fresh user
+   * activation and/or fight getUserMedia for the same microphone. The PCM
+   * path is deliberately the reliable mobile path; desktop keeps the lower
+   * latency browser recognizer.
+   */
+  static prefersPcmFallback() {
+    if (typeof navigator === 'undefined') return false;
+    const ua = navigator.userAgent || '';
+    return /Android|iPhone|iPad|iPod|Mobile/i.test(ua)
+      || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+  }
+
   start() {
-    if (!AsrClient.supported()) return this.o.onStatus?.('unsupported');
+    if (AsrClient.prefersPcmFallback() || !AsrClient.supported()) {
+      return this.o.onStatus?.('unsupported');
+    }
     this.running = true;
     this.spawn();
   }
