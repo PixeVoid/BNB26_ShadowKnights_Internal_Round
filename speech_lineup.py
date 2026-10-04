@@ -376,6 +376,15 @@ async def websocket_session(websocket: WebSocket, room_id: str):
             "lastT": int(room.latest_level_t),
             "lastSeq": int(last_seq),
         })
+        for p_dev, p_data in room.participants.items():
+            if p_dev != dev:
+                await websocket.send_json({
+                    "type": "presence",
+                    "dev": p_dev,
+                    "name": p_data["name"],
+                    "state": p_data["state"],
+                    "timestamp": _epoch_ms(),
+                })
         await room.broadcast({
             "type": "presence",
             "dev": dev,

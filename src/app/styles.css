@@ -40,7 +40,8 @@ main {
   height: 100dvh;
   width: 100vw;
   position: relative;
-  overflow: hidden;
+  overflow-x: hidden;
+  overflow-y: auto;
   display: flex;
   flex-direction: column;
   background: radial-gradient(ellipse at 77% 16%,#fff9 0,transparent 28%),radial-gradient(ellipse at 6% 78%,#d8d1eb80 0,transparent 32%),var(--bg);
