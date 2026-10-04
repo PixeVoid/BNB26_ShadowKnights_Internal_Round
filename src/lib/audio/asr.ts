@@ -48,6 +48,7 @@ export class AsrClient {
   }
 
   private spawn() {
+    const startedAt = Date.now();
     const SR = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
     const rec = new SR();
     rec.continuous = true;
@@ -85,7 +86,14 @@ export class AsrClient {
 
     rec.onerror = (e: any) => {
       const err = e?.error;
-      if (err === 'no-speech' || err === 'aborted') return;
+      if (err === 'no-speech' || err === 'aborted') {
+        if (Date.now() - startedAt < 1000) {
+          // Rapid aborts indicate hardware conflicts (like getUserMedia blocking the mic on Android)
+          // Fall through to increment failures.
+        } else {
+          return;
+        }
+      }
       if (err === 'not-allowed' || err === 'service-not-allowed') {
         this.running = false;
         this.o.onStatus?.('blocked');
@@ -107,6 +115,16 @@ export class AsrClient {
       this.lastLen = 0;
       this.t0.clear();
       if (!this.running) return;
+      
+      if (Date.now() - startedAt < 500) {
+        this.failures++;
+      }
+      if (this.failures >= 3) {
+        this.running = false;
+        this.o.onStatus?.('failing');
+        return;
+      }
+      
       this.o.onStatus?.('restarting');
       const delay = Math.min(3000, 150 * 2 ** this.failures);
       this.timer = window.setTimeout(() => this.running && this.spawn(), delay);
