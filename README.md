@@ -5,6 +5,8 @@ Roundtable is a phone-first shared room for live, speaker-attributed captions an
 **For Judges - Live Demo Link:**  
 🔗 **[Roundtable on Vercel](https://bnb-26-shadow-knights-internal-roun.vercel.app/)**
 
+![Roundtable Live Session](screenshot.png)
+
 ---
 
 ## ✨ Features

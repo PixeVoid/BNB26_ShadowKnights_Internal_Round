@@ -211,10 +211,7 @@ class RoomState:
         try:
             results = await asyncio.to_thread(_transcribe_pcm, pcm)
         except Exception as exc:
-            message = f"Local PCM speech recognition failed: {exc}"
-            logger.exception("PCM speech recognition failed in room %s", self.room_id)
-            await self.broadcast({"type": "transcript_status", "status": "error", "message": message})
-            await self.broadcast({"type": "transcript_error", "message": message})
+            logger.warning("PCM speech recognition fallback skipped in room %s (missing dependencies or failed): %s", self.room_id, exc)
             return
 
         participant = self.participants.get(dev)
@@ -289,7 +286,7 @@ class RoomState:
         def _generate_summary():
             client = genai.Client(api_key=api_key)
             response = client.models.generate_content(
-                model='gemini-3.8-flash',
+                model='gemini-3.7-flash',
                 contents=prompt,
             )
             return response.text
@@ -572,6 +569,13 @@ async def websocket_session(websocket: WebSocket, room_id: str):
                             "status": "pending",
                             "votes": _vote_rows(room),
                         })
+                elif msg_type == "cancel_meeting_end_proposal":
+                    proposal = room.end_proposal
+                    if proposal is not None and data.get("proposal_id") == proposal["id"] and dev == proposal["proposer"]:
+                        await _close_proposal(room, "cancelled", "The proposer cancelled the end meeting vote.")
+                elif msg_type == "retry_summary":
+                    if room.meeting_ended and room.ai_summary_status == "error":
+                        asyncio.create_task(room.generate_ai_summary())
             elif message.get("bytes") is not None:
                 if room.meeting_ended:
                     continue

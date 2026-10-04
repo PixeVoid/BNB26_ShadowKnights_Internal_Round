@@ -816,6 +816,7 @@ main {
   display: flex;
   flex-direction: column;
   min-height: 565px;
+  max-height: calc(100vh - 200px);
   box-shadow: 0 8px 30px #5852680d;
 }
 .transcript-heading {
@@ -2385,6 +2386,18 @@ main.phone-preview .mic-waveform i { width: 3px; max-height: 27px; }
   color: #75837c;
   font: 8px var(--mono);
   letter-spacing: .07em;
+}
+.retry-button {
+  background: #3952a8;
+  color: #fff !important;
+  border: none;
+  padding: 3px 6px;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: opacity .2s;
+}
+.retry-button:hover {
+  opacity: .8;
 }
 .ai-summary-content > p {
   margin: 11px 0 12px;
