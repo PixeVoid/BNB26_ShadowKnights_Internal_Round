@@ -93,7 +93,6 @@ export function useRoundtableAudio(cfg: RoundtableAudioConfig) {
         },
         onPcm: (pcm, t) => link.sendPcm(pcm, t),
         onHealth: (h) => {
-          if (h.kind === 'silent' && modeRef.current === 'webspeech') toPcm();
           if (h.kind === 'ended') setError('The microphone was disconnected.');
         },
       });

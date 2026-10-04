@@ -49,34 +49,35 @@ def _epoch_ms() -> int:
 
 
 def _transcribe_pcm(pcm_bytes: bytes) -> list:
-    """Run the optional local faster-whisper model outside the event loop."""
-    global _WHISPER_MODEL
+    """Run speech recognition on PCM fallback audio."""
     try:
-        import numpy as np
-        from faster_whisper import WhisperModel
+        import speech_recognition as sr
     except ImportError as exc:
-        raise RuntimeError(
-            "PCM speech recognition requires faster-whisper and numpy; "
-            "install the backend requirements."
-        ) from exc
+        raise RuntimeError("PCM speech recognition requires SpeechRecognition library") from exc
 
-    with _WHISPER_LOCK:
-        if _WHISPER_MODEL is None:
-            model_name = os.environ.get("WHISPER_MODEL", "tiny")
-            _WHISPER_MODEL = WhisperModel(model_name, device="cpu", compute_type="int8")
-
-        samples = np.frombuffer(pcm_bytes, dtype="<i2").astype(np.float32) / 32768.0
-        segments, _ = _WHISPER_MODEL.transcribe(samples, vad_filter=True)
-        return [
-            {
-                "start": float(segment.start),
-                "end": float(segment.end),
-                "text": segment.text.strip(),
-                "conf": min(1.0, max(0.0, math.exp(min(0.0, segment.avg_logprob)))),
-            }
-            for segment in segments
-            if segment.text.strip()
-        ]
+    recognizer = sr.Recognizer()
+    # pcm_bytes is raw 16-bit 16kHz mono audio. We wrap it in AudioData.
+    audio_data = sr.AudioData(pcm_bytes, PCM_RATE, 2)
+    
+    try:
+        text = recognizer.recognize_google(audio_data)
+        if not text:
+            return []
+        
+        # Google's API returns the full text without precise word-level timestamps.
+        # We will map the entire chunk to one segment.
+        duration_s = len(pcm_bytes) / (PCM_RATE * 2)
+        return [{
+            "start": 0.0,
+            "end": float(duration_s),
+            "text": text,
+            "conf": 1.0,
+        }]
+    except sr.UnknownValueError:
+        return []
+    except sr.RequestError as e:
+        logger.warning("Could not request results from Google Speech Recognition service; %s", e)
+        return []
 
 
 class RoomState:
