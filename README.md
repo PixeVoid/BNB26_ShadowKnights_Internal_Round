@@ -1,49 +1,73 @@
 # Roundtable
 
-Roundtable is a phone-first shared room for live, speaker-attributed captions. The **root Next.js app** is the single production frontend used by the repository’s root scripts and deployment.
+Roundtable is a phone-first shared room for live, speaker-attributed captions and AI-powered meeting summaries. Built for fast, collaborative, and accessible conversations, it seamlessly tracks who is speaking and transcribes the room in real-time.
 
-**Live demo:** [roundtable on Vercel](https://bnb-26-shadow-knights-internal-roun.vercel.app/)
+**For Judges - Live Demo Link:**  
+🔗 **[Roundtable on Vercel](https://bnb-26-shadow-knights-internal-roun.vercel.app/)**
 
-## Run the frontend
+---
 
+## ✨ Features
+
+- **Live Speaker Attribution:** Visualizes real-time audio levels to show exactly who is speaking using dynamic, colorful waveforms.
+- **Collaborative Captions:** Uses the Web Speech API (with PCM fallback) to deliver fast, low-latency live captions to everyone in the room.
+- **Democratic Meeting Controls:** Built-in voting mechanism. Any active speaker can propose to end the meeting, requiring unanimous consent to conclude.
+- **Gemini AI Summaries:** Once a meeting concludes, the backend securely processes the finalized transcripts and broadcasts a structured, markdown-formatted AI summary directly back to everyone's screen.
+- **Responsive "Phone View":** Test the mobile experience seamlessly from a desktop browser using the universal navigation toggle.
+
+---
+
+## 🏗 Architecture
+
+- **Frontend:** Next.js (React) application. It handles microphone capture, audio processing worklets (20ms level/VAD), WebSocket communication, and responsive UI rendering.
+- **Backend:** Python + FastAPI + WebSockets (`speech_lineup.py`). Maintains room state, syncs participant presence, handles the voting lifecycle, reconciles caption segments, and integrates with the Google Gemini API for post-meeting summarization.
+
+---
+
+## 🚀 Deployment
+
+### Frontend (Vercel)
+The root Next.js app is deployed to Vercel. Set the `NEXT_PUBLIC_API_URL` environment variable to point to your backend's HTTP origin. 
+
+*If no `NEXT_PUBLIC_API_URL` is set, the frontend will start in a visual Preview Mode with sample participants and captions.*
+
+### Backend (Render)
+The backend is configured for 1-click deployment on Render using the included `render.yaml` Blueprint.
+
+1. Create a new **Blueprint** on your Render dashboard and point it to this repository.
+2. The blueprint will automatically provision a **Free Web Service** instance.
+3. Add the following environment variable to the service:
+   - `GEMINI_API_KEY`: Your Google Gemini API key (required for AI summaries).
+4. **Keep-alive:** The frontend automatically pings the backend every 10 minutes to prevent the Render free tier from sleeping during active sessions.
+
+---
+
+## 💻 Local Development
+
+### 1. Start the Backend
+The backend runs on Python and uses WebSockets.
+```bash
+python -m pip install -r requirements.txt
+export GEMINI_API_KEY="your-api-key-here"
+python speech_lineup.py
+```
+*(The backend will start on `http://localhost:8000`)*
+
+### 2. Start the Frontend
 ```bash
 npm install
 npm run dev
 ```
+Open `http://localhost:3000`. The frontend will automatically connect to `http://localhost:8000` on localhost.
 
-Open `http://localhost:3000`. For microphone access on physical phones, use HTTPS (for example, a trusted development tunnel).
+> **Note:** For microphone access on physical phones in local development, you must serve the frontend over HTTPS (e.g., using a tool like `ngrok` or a trusted development tunnel).
 
-Set `NEXT_PUBLIC_API_URL` to the backend's HTTP origin to enable backend mode. The app checks `GET /health` and then opens `/ws/{roomCode}`. Without this variable, it starts in Preview mode with sample participants and captions.
+---
 
-On localhost, the frontend automatically uses `http://localhost:8000`. Install and start the local prototype in a second terminal:
+## 📁 Project Structure
 
-```bash
-python -m pip install -r requirements.txt
-python speech_lineup.py
-```
-
-## Project structure
-
-- `src/app/` — production UI and the `/diagnostics` route.
-- `src/lib/audio/` — shared microphone capture, Web Speech, WebSocket, buffering, and calibration client.
-- `public/worklet/level-processor.js` — 20 ms level/VAD worklet, with PCM fallback support.
-- `public/coexist-test.html` — isolated browser check for mic metering and Web Speech running together.
-- `speech_lineup.py` — current Python room-attribution prototype.
-
-The audio diagnostics route uses the same audio client as the production UI. On localhost it defaults to `ws://localhost:8000/ws/diagnostics`; elsewhere, supply a `ws` query parameter or enter the backend WebSocket URL.
-
-## Backend integration status
-
-The Python backend now accepts the frontend's health check, hello/ping/pong messages, batched level samples, ASR messages, PCM fallback frames, mic state, meeting-end votes, and final transcript events. It provides deterministic local caption ordering; a production speech/AI worker can replace that finalizer later.
-
-### Meeting end and shared transcript messages
-
-The client joins with its microphone muted. Turning the mic on or off only changes that device's audio contribution; it must never end or leave the room. Clients send `{type:"mic_state", dev, name, enabled}` when the state changes.
-
-An unmuted participant may propose to end the meeting with `{type:"meeting_end_propose", proposal_id, dev, name}`. The server opens one vote for the room and broadcasts `meeting_end_proposed` with `proposal_id`, `proposer_dev`, `proposer_name`, and a `votes` array of `{dev, name, vote}` entries. The voter list must contain **every joined participant**, including participants whose microphones are muted. Count the proposer as an initial `end` vote. Everyone else can send `{type:"meeting_end_vote", proposal_id, dev, vote:"end"|"continue"}` while remaining in the room.
-
-After each vote, broadcast `meeting_end_vote_update` with that proposal ID, a `votes` array, and `status:"pending"`. Any `continue` vote rejects the proposal and broadcasts `status:"rejected"`; if a participant disconnects before the vote resolves, cancel it with `status:"cancelled"`. If and only if every participant in the vote agrees, stop accepting live audio and broadcast `{type:"meeting_ended", proposal_id}` to everyone. A muted microphone still receives and can vote on the proposal. Keep all room WebSockets open after `meeting_ended`; the clients stop local capture/ASR but stay connected for transcript delivery.
-
-While reconciling ASR segments with timestamps, confidence, and calibrated mic levels, the local backend sends `{type:"transcript_status", status:"processing"}` followed by `transcript_ready` with final `{id, speaker, t0, t1, text, conf, polished?}` segments. Timestamps are epoch milliseconds. The local finalizer preserves and orders browser ASR text; it is not an AI rewrite service.
-
-The browser Web Speech API may send audio to the browser vendor's speech service. When the client falls back to PCM, audio is sent to the configured backend.
+- `src/app/` — Production UI, CSS, and routing.
+- `src/lib/audio/` — Shared microphone capture, Web Speech integration, WebSocket buffering, and calibration client.
+- `public/worklet/level-processor.js` — Custom 20ms audio level/VAD worklet.
+- `speech_lineup.py` — The core Python WebSocket server and Gemini AI integration.
+- `render.yaml` — Infrastructure as Code (IaC) configuration for Render deployment.
