@@ -289,7 +289,7 @@ class RoomState:
         def _generate_summary():
             client = genai.Client(api_key=api_key)
             response = client.models.generate_content(
-                model='gemini-2.5-flash',
+                model='gemini-3.0-flash',
                 contents=prompt,
             )
             return response.text
